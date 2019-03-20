@@ -104,9 +104,7 @@
     <Resource Include="resource\aiso.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="resource\C.png" />
     <Resource Include="resource\ec.png" />
-    <Resource Include="resource\k.png" />
     <Resource Include="resource\L10.png" />
     <Resource Include="resource\Lnm.png" />
     <Resource Include="resource\P.png" />
