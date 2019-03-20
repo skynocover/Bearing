@@ -25,86 +25,117 @@ namespace Bearing
         {
             InitializeComponent();
         }
+        //將前後負荷變成全域變數
+        //前後負荷在使用時要變成ABS
+        //函數帶入數值而非寫死
+        //注意黏度v1可能需要兩個
+        //確認是否使用延長壽命 可能有問題
+        #region 宣告
+        
+        //共用輸入
+        public int Rpm;//轉速
+        public double Ka; //軸向力
+        public double V1;//參考黏度
 
-        #region 各種參數
+        public int Hours;//一天使用時數
+        public int Days;//一年使用天數
+        
+        //共用輸出
+        public double Aiso;//壽命調整係數
 
-        //輸入
+        //前軸承輸入
         public int C0; //額定靜負荷
         public int Cs; //額定動負荷
         public int i; //軸承個數
-        public double Ka; //軸向力
-        public double Fv; //預壓力
-        public int Rpm;//轉速
-        public double Fr; //徑向負荷
         public int Dm;//節圓直徑
-        public double V1;//參考黏度
-        public double Aiso;//壽命調整係數
-
-        //輸出
+        public double Fv; //預壓力
+        public double Fr; //徑向負荷
+        //前軸承輸出
+        public double C;//額定動負荷
         public double Fa; //軸向負荷
         public double X;//徑向係數
         public double Y;//軸向係數
         public double P;//徑向當量動負荷
-        public double C;//額定動負荷
 
-        public double[,] Ec = new double[2, 7] { { 1,0.7,0.55,0.4,0.2,0.05,0},{1,0.85,0.75,0.5,0.3,0.05,0 } };//汙染係數參數
 
-        //參考值
-        public double[] A_15 = new double[9] { 0.015, 0.029, 0.058, 0.087, 0.12, 0.17, 0.29, 0.44, 0.58 };
-        public double[] Aee = new double[9] { 0.38, 0.4, 0.43, 0.46, 0.47, 0.5, 0.55, 0.56, 0.56 };
-        public double[,] A_15X = new double[2, 2] { { 1, 0.44 }, { 1, 0.72 } };
-        public double[,,] A_15Y = new double[2, 2, 9] { { { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 1.47, 1.4, 1.3, 1.23, 1.19, 1.12, 1.02, 1, 1 } },
-                                                        { { 1.65, 1.57, 1.46, 1.38, 1.34, 1.26, 1.14, 1.12, 1.12 }, { 2.39, 2.28, 2.11, 2, 1.93, 1.82, 1.66, 1.63, 1.63 } } };
+        //後軸承輸入
 
-        //XY參數
-        public double[,,] A_20 = new double[2, 2, 2] { { { 1, 0 }, { 0.43, 1 } }, { { 1, 1.09 }, { 0.7, 1.63 } } };
-        public double[,,] A_25 = new double[2, 2, 2] { { { 1, 0 }, { 0.41, 0.87 } }, { { 1, 0.92 }, { 0.67, 1.41 } } };
+        //後軸承輸出
 
-        public double[] DG = new double[9] { 0.014, 0.028, 0.056, 0.085, 0.11, 0.17, 0.28, 0.42, 0.56 };
-        public double[] DGee = new double[9] { 0.23, 0.26, 0.3, 0.34, 0.36, 0.4, 0.45, 0.5, 0.52 };
-        public double[,] DGX = new double[2, 2] { { 1, 0 }, { 1, 0.78 } };
-        public double[,,] DGY = new double[2, 2, 9] { { { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 2.3, 1.99, 1.71, 1.55, 1.45, 1.31, 1.15, 1.04, 1 } },
-                                                      { { 2.78, 2.4, 2.07, 1.87, 1.75, 1.58, 1.39, 1.26, 1.21 }, { 3.74, 3.23, 2.78, 2.52, 2.36, 2.13, 1.87, 1.69, 1.63 } } };
+        #endregion
+
+        #region 參數
 
         //失效概率
         public double[] A1 = new double[6] { 0.25, 0.37, 0.47, 0.55, 0.64, 1 };
         //最大運行溫度
         public double[] Ft = new double[4] { 1, 0.73, 0.42, 0.22 };
+        //汙染係數
+        public double[,] Ec = new double[2, 7] { { 1,0.7,0.55,0.4,0.2,0.05,0},{1,0.85,0.75,0.5,0.3,0.05,0 } };
 
+        //參考值
+        public double[] A_15 = new double[9] { 0.015, 0.029, 0.058, 0.087, 0.12, 0.17, 0.29, 0.44, 0.58 };
+        public double[] DG = new double[9] { 0.014, 0.028, 0.056, 0.085, 0.11, 0.17, 0.28, 0.42, 0.56 };
+
+        //e值
+        public double[] Aee = new double[9] { 0.38, 0.4, 0.43, 0.46, 0.47, 0.5, 0.55, 0.56, 0.56 };
+        public double[] DGee = new double[9] { 0.23, 0.26, 0.3, 0.34, 0.36, 0.4, 0.45, 0.5, 0.52 };
+
+        //XY參數
+        public double[,] A_15X = new double[2, 2] { { 1, 0.44 }, { 1, 0.72 } };
+        public double[,,] A_15Y = new double[2, 2, 9] { { { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 1.47, 1.4, 1.3, 1.23, 1.19, 1.12, 1.02, 1, 1 } },
+                                                        { { 1.65, 1.57, 1.46, 1.38, 1.34, 1.26, 1.14, 1.12, 1.12 }, { 2.39, 2.28, 2.11, 2, 1.93, 1.82, 1.66, 1.63, 1.63 } } };
+        public double[,,] A_20 = new double[2, 2, 2] { { { 1, 0 }, { 0.43, 1 } }, { { 1, 1.09 }, { 0.7, 1.63 } } };
+        public double[,,] A_25 = new double[2, 2, 2] { { { 1, 0 }, { 0.41, 0.87 } }, { { 1, 0.92 }, { 0.67, 1.41 } } };
+        public double[,] DGX = new double[2, 2] { { 1, 0 }, { 1, 0.78 } };
+        public double[,,] DGY = new double[2, 2, 9] { { { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 2.3, 1.99, 1.71, 1.55, 1.45, 1.31, 1.15, 1.04, 1 } },
+                                                      { { 2.78, 2.4, 2.07, 1.87, 1.75, 1.58, 1.39, 1.26, 1.21 }, { 3.74, 3.23, 2.78, 2.52, 2.36, 2.13, 1.87, 1.69, 1.63 } } };
         #endregion
 
 
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            load();
-            checkornot(false, -1);
-            Chart.Source = new BitmapImage(new Uri(@"resource/p1p2.png", UriKind.Relative));
+            load(); //載入參數
+            checkornot(false, -1); //不使用check
+            Chart.Source = new BitmapImage(new Uri(@"resource/p1p2.png", UriKind.Relative)); //中央圖片載入
         }
         
-        private void load() //將所有輸入帶入
+        private void load() //將所有輸入載入
         {
-            C0 = Int32.Parse(c0.Text);
-            Cs = Int32.Parse(c_single.Text);
-            i = Int32.Parse(i_nofb.Text);
-            Ka = Int32.Parse(ka.Text);
-            Fv = Int32.Parse(fv.Text);
-            Rpm = Int32.Parse(rpm.Text);
-            Fr = Int32.Parse(fr.Text);
-            Dm = Int32.Parse(dm.Text);
-            V1 = Int32.Parse(v1.Text);
-            Aiso = float.Parse(life_p.Text);
+            //共用
+             Rpm = Int32.Parse(rpm.Text);//轉速
+             Ka = Int32.Parse(ka.Text); //軸向力
+             V1 = Int32.Parse(v1.Text);//參考黏度
+
+
+            //改用全域變數代替
+             Aiso = float.Parse(life_p.Text); 
+
+            //一天使用時數
+            //一年使用天數
+
+            //前軸承
+             C0 = Int32.Parse(c0.Text); //額定靜負荷
+             Cs = Int32.Parse(c_single.Text); //額定動負荷
+             i = Int32.Parse(i_nofb.Text); //軸承個數
+             Dm = Int32.Parse(dm.Text);//節圓直徑
+             Fv = Int32.Parse(fv.Text); //預壓力
+             Fr = Int32.Parse(fr.Text); //徑向負荷
+
+            //後軸承
+
         }
 
         private void Calculate() //所有的計算
         {
-            load();
-            F_calculate();
-            C_calculate();
-            X_Y_calculate();
-            P_calculate();
-            Life_calculate();
-            Life_year.Text= Year_calculate(Int32.Parse(life.Text)).ToString();
+            load(); //載入參數
+            F_calculate(); //軸向負荷計算
+            C_calculate(); //額定動負荷計算
+            X_Y_calculate(); //XY係數計算
+            P_calculate(); //當量軸承負荷計算
+            Life_calculate(); //額定壽命計算
+            Life_year.Text= Year_calculate(Int32.Parse(life.Text)).ToString(); //延長壽命計算
             if (uselife2.IsChecked ==true)
             {
                 life2.Text=Math.Round(Life2_calculate(Int32.Parse(life.Text)),0).ToString();
@@ -112,7 +143,6 @@ namespace Bearing
                 Life_year.Text = Year_calculate(Int32.Parse(life2.Text)).ToString();
             }
         }
-
 
         private void F_calculate() //軸向負荷計算
         {
@@ -126,12 +156,27 @@ namespace Bearing
             }
             fa.Text = Math.Round(Fa, 0).ToString();
         }
+        //private double F_calculate(double ka,double fv) //軸向負荷計算
+        //{
+        //    if (ka > 3 * fv)
+        //    {
+        //        return  ka;
+        //    }
+        //    else
+        //    {
+        //        return  fv + 0.67 * ka;
+        //    }
+        //}
 
         private void C_calculate() //額定動負荷計算
         {
             C = Math.Round((Math.Pow(i, 0.7) * Cs), 2);
             c.Text = Math.Round(C, 2).ToString();
         }
+        //private void C_calculate(double ii,double cs) //額定動負荷計算
+        //{
+        //    return  Math.Pow(ii, 0.7) * cs;
+        //}
 
         private void P_calculate() //當量的軸承負荷計算
         {
@@ -238,19 +283,24 @@ namespace Bearing
         {
             double p1 = Int32.Parse(Hour_day.Text);
             double p2 = Int32.Parse(Day_year.Text);
-            return Math.Round(hour / p1 / p2, 2);
+            return hour / p1 / p2;
         }
+
         private void Life_calculate() //額定壽命計算
         {
             life.Text = Math.Round(1000000 / 60 / Rpm * Math.Pow(C / P, 3), 0).ToString();
         }
-
+        //private void Life_calculate(double c, double p) //額定壽命計算
+        //{
+        //    return 1000000 / 60 / Rpm * Math.Pow(c / p, 3);
+        //}
 
         private double Life2_calculate(double time) //延長壽命計算
         {
             return time * Aiso * Ft[Tempture.SelectedIndex] * A1[lost_chance.SelectedIndex];
         }
 
+        #region 延長壽命
         private void k_calculate() //黏度比計算
         {
             double p1 = Math.Log(Int32.Parse(v40.Text) / Int32.Parse(v100.Text), Math.E);
@@ -260,6 +310,7 @@ namespace Bearing
 
             k.Text = Math.Round((v / Int32.Parse(v1.Text)), 1).ToString();
         }
+
         private void aiso_calculate() //調整係數計算
         {
             double cu;
@@ -275,10 +326,25 @@ namespace Bearing
                 ec = Ec[1, clean.SelectedIndex];
             }
             eccup.Text = Math.Round((ec * cu / P), 2).ToString();
-
-
         }
-        
+        //private void eccup_calculate(double dm , double c0 , double p) //調整係數計算
+        //{
+        //    double cu;
+        //    double ec;
+        //    if (dm <= 100)
+        //    {
+        //        cu = c0 / 22;
+        //        ec = Ec[0, clean.SelectedIndex];
+        //    }
+        //    else
+        //    {
+        //        cu = c0 / 22 * (Math.Pow(100 / dm, 0.5));
+        //        ec = Ec[1, clean.SelectedIndex];
+        //    }
+        //    return ec * cu / p;
+        //}
+        #endregion
+
         //確認是否使用延長壽命
         private void checkornot(bool b,int s)
         {
@@ -291,35 +357,12 @@ namespace Bearing
             clean.IsEnabled = b;
             clean.SelectedIndex = s;
             life_p.IsEnabled = b;
-            life_p.Text = "1";
+            life_p.Text = "1"; //注意這是什麼
         }
-        //顯示圖片
-        private void showimg(string name)
-        {
-            string route = Directory.GetCurrentDirectory() + "\\resource" + "\\"+name;
-
-            FileStream fstream = new FileStream(route, FileMode.Open);
-            BitmapImage bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.StreamSource = fstream;
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.EndInit();
-            fstream.Close();
-
-            Chart.BeginInit();
-            Chart.Source = bitmap;
-            Chart.EndInit();
-        }
-
 
         #region 按鈕
 
-        //係數按鈕
-        private void P_pic_btm_Click(object sender, RoutedEventArgs e)
-        {
-            Chart.Source = new BitmapImage(new Uri(@"resource/p1p2.png", UriKind.Relative));
-        }
-
+        //計算修正係數按鈕
         private void AisoC_btm_Click(object sender, RoutedEventArgs e)
         {
             k_calculate();
@@ -332,13 +375,6 @@ namespace Bearing
             Calculate();
         }
 
-        //顯示壽命係數圖表
-        private void Aiso_btm_Click(object sender, RoutedEventArgs e)
-        {
-            //showimg("aiso.png");
-            Chart.Source = new BitmapImage(new Uri(@"resource/aiso.png", UriKind.Relative));
-
-        }
         
         //啟用與停用壽命延長
         private void Uselife2_Checked(object sender, RoutedEventArgs e)
@@ -346,6 +382,7 @@ namespace Bearing
             checkornot(true, 0);
         }
 
+        //如果
         private void Uselife2_Unchecked(object sender, RoutedEventArgs e)
         {
             checkornot(false, -1);
@@ -377,6 +414,7 @@ namespace Bearing
 
             Calculate();
         }
+        #region 圖表顯示按鈕
 
         //顯示壽命公式
         private void Life1_btm_Click(object sender, RoutedEventArgs e)
@@ -388,20 +426,34 @@ namespace Bearing
         {
             Chart.Source = new BitmapImage(new Uri(@"resource/Lnm.png", UriKind.Relative));
         }
+        //顯示軸向公式
         private void Fa_btm_Click(object sender, RoutedEventArgs e)
         {
             Chart.Source = new BitmapImage(new Uri(@"resource/P.png", UriKind.Relative));
         }
+        //顯示v1圖表
         private void V1_btm_Click(object sender, RoutedEventArgs e)
         {
             Chart.Source = new BitmapImage(new Uri(@"resource/v1.png", UriKind.Relative));
         }
+
+        //顯示壽命係數圖表
+        private void Aiso_btm_Click(object sender, RoutedEventArgs e)
+        {
+            //showimg("aiso.png");
+            Chart.Source = new BitmapImage(new Uri(@"resource/aiso.png", UriKind.Relative));
+
+        }
+        //係數公式按鈕
+        private void P_pic_btm_Click(object sender, RoutedEventArgs e)
+        {
+            Chart.Source = new BitmapImage(new Uri(@"resource/p1p2.png", UriKind.Relative));
+        }
         #endregion
 
-        
+        #endregion
 
-
-        #region //初始化
+        #region 初始化
 
         private void A_length_GotFocus(object sender, RoutedEventArgs e)
         {
@@ -429,7 +481,8 @@ namespace Bearing
         }
         #endregion
 
-        #region //負荷計算
+        #region 負荷計算模組
+
         private void Force_btm_Click(object sender, RoutedEventArgs e)
         {
             P1P2_calculate();
@@ -451,6 +504,25 @@ namespace Bearing
 
         #endregion
 
-        
+        #region 用不到的東西
+        //顯示圖片
+        private void showimg(string name)
+        {
+            string route = Directory.GetCurrentDirectory() + "\\resource" + "\\" + name;
+
+            FileStream fstream = new FileStream(route, FileMode.Open);
+            BitmapImage bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.StreamSource = fstream;
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.EndInit();
+            fstream.Close();
+
+            Chart.BeginInit();
+            Chart.Source = bitmap;
+            Chart.EndInit();
+        }
+        #endregion
+
     }
 }
