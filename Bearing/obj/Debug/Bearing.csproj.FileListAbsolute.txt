@@ -1,0 +1,15 @@
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\bin\Debug\Bearing.exe.config
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\bin\Debug\Bearing.exe
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\bin\Debug\Bearing.pdb
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\obj\Debug\Bearing.csprojAssemblyReference.cache
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\obj\Debug\MainWindow.g.cs
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\obj\Debug\App.g.cs
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\obj\Debug\Bearing_MarkupCompile.cache
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\obj\Debug\Bearing_MarkupCompile.lref
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\obj\Debug\MainWindow.baml
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\obj\Debug\Bearing.g.resources
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\obj\Debug\Bearing.Properties.Resources.resources
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\obj\Debug\Bearing.csproj.GenerateResource.cache
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\obj\Debug\Bearing.csproj.CoreCompileInputs.cache
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\obj\Debug\Bearing.exe
+C:\Users\Eric\Desktop\CODE\Bearing\Bearing\obj\Debug\Bearing.pdb
