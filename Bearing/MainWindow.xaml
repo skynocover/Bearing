@@ -5,17 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Bearing"
         mc:Ignorable="d"
-        Title="Bearing" Height="944" Width="1384" Loaded="Window_Loaded">
+        Title="Bearing" Height="929" Width="1519" Loaded="Window_Loaded" Closing="Main_Closing">
     <Grid Margin="0">
         <Grid.RowDefinitions>
             <RowDefinition Height="0*"/>
-            <RowDefinition/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="274*"/>
+            <RowDefinition Height="17*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="0*"/>
-            <ColumnDefinition Width="992"/>
+            <ColumnDefinition Width="444*"/>
+            <ColumnDefinition Width="785*"/>
+            <ColumnDefinition Width="250*"/>
         </Grid.ColumnDefinitions>
-        <Grid HorizontalAlignment="Left" Height="213" Margin="14,628,0,0" VerticalAlignment="Top" Width="216" Background="#FF14CDCD" Grid.Row="1" Grid.Column="1">
+        <Grid HorizontalAlignment="Left" Margin="0,598,0,0" Width="216" Background="#FF14CDCD" Grid.Row="2">
             <TextBox x:Name="life" Height="23" Margin="97,84,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="76" IsReadOnly="True"/>
             <Label Content="基本額定壽命" HorizontalAlignment="Left" Margin="10,82,0,0" VerticalAlignment="Top" Width="82"/>
             <Label Content="前軸承壽命" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" Width="156" RenderTransformOrigin="0.371,-0.12" FontSize="20"/>
@@ -31,7 +34,7 @@
             <TextBox x:Name="life2" HorizontalAlignment="Left" Height="23" Margin="97,125,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="76" IsReadOnly="True"/>
             <Label Content="小時" Margin="175,125,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="39" RenderTransformOrigin="-0.051,0.36"/>
         </Grid>
-        <Grid HorizontalAlignment="Left" Height="133" Margin="1126,36,-314,0" VerticalAlignment="Top" Width="181" Background="#FFF97E29" Grid.RowSpan="2" Grid.Column="1">
+        <Grid Height="133" Margin="5,5,66,0" VerticalAlignment="Top" Background="#FFF97E29" Grid.Row="2" Grid.Column="2">
             <Label Content="每天使用時數" HorizontalAlignment="Left" Margin="10,65,0,0" VerticalAlignment="Top"/>
             <Label Content="一年使用天數" HorizontalAlignment="Left" Margin="10,103,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.463,-0.6"/>
             <TextBox x:Name="Day_year" HorizontalAlignment="Left" Height="23" Margin="111,103,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="44" Text="365" RenderTransformOrigin="0.494,0.043"/>
@@ -41,33 +44,33 @@
             <Label Content="速度" HorizontalAlignment="Left" Margin="39,35,0,0" VerticalAlignment="Top"/>
             <TextBox x:Name="rpm" HorizontalAlignment="Left" Height="23" Margin="111,35,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="46" Text="10000"/>
         </Grid>
-        <Grid HorizontalAlignment="Left" Height="82" Margin="1126,174,-314,0" VerticalAlignment="Top" Width="181" Background="#FFF75A4A" Grid.RowSpan="2" Grid.Column="1">
+        <Grid Height="87" Margin="5,143,66,0" VerticalAlignment="Top" Background="#FFF75A4A" Grid.Row="2" Grid.Column="2">
             <Label Content="設定負荷" HorizontalAlignment="Left" Margin="0,5,0,0" VerticalAlignment="Top" Width="116" RenderTransformOrigin="0.371,-0.12" FontSize="20"/>
             <Label Content="外部軸向力" HorizontalAlignment="Left" Margin="19,45,0,0" VerticalAlignment="Top"/>
             <TextBox x:Name="ka" HorizontalAlignment="Left" Height="23" Margin="94,45,0,0" TextWrapping="Wrap" Text="500" VerticalAlignment="Top" Width="73"/>
             <Button x:Name="Fa_btm" Content="顯示公式" HorizontalAlignment="Left" Margin="106,10,0,0" VerticalAlignment="Top" Width="61" Height="30" Click="Fa_btm_Click"/>
         </Grid>
-        <Grid Background="#FFE5E5E5" Margin="10,36,542,672" Grid.RowSpan="2" Grid.Column="1">
+        <Grid Background="#FFE5E5E5" Margin="0,60,5,587" Grid.Row="2">
             <Label Content="A" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="30" Width="41" FontSize="16"/>
             <TextBox x:Name="A_length" HorizontalAlignment="Left" Height="30" Margin="56,10,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="85" FontSize="16" GotFocus="A_length_GotFocus"/>
-            <Label Content="B" HorizontalAlignment="Left" Margin="10,60,0,0" VerticalAlignment="Top" Height="30" Width="46" FontSize="16"/>
-            <TextBox x:Name="B_length" HorizontalAlignment="Left" Height="30" Margin="56,60,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="85" FontSize="16" GotFocus="B_length_GotFocus"/>
-            <Label Content="C" HorizontalAlignment="Left" Margin="10,117,0,0" VerticalAlignment="Top" Height="30" Width="46" FontSize="16"/>
-            <TextBox x:Name="C_length" HorizontalAlignment="Left" Height="30" Margin="56,117,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="85" FontSize="16" GotFocus="C_length_GotFocus"/>
-            <Label Content="P1" HorizontalAlignment="Left" Margin="236,60,0,0" VerticalAlignment="Top" Height="30" Width="46" FontSize="16"/>
-            <TextBox x:Name="P1_force" HorizontalAlignment="Left" Height="30" Margin="287,60,0,0" TextWrapping="Wrap" Text="-200" VerticalAlignment="Top" Width="85" FontSize="16" GotFocus="P1_force_GotFocus"/>
-            <Label Content="P2" HorizontalAlignment="Left" Margin="236,117,0,0" VerticalAlignment="Top" Height="30" Width="46" FontSize="16"/>
-            <TextBox x:Name="P2_force" HorizontalAlignment="Left" Height="30" Margin="287,117,0,0" TextWrapping="Wrap" Text="-100" VerticalAlignment="Top" Width="85" FontSize="16" GotFocus="P2_force_GotFocus"/>
-            <Label Content="mm" HorizontalAlignment="Left" Margin="146,14,0,0" VerticalAlignment="Top" Height="30" Width="67" FontSize="16"/>
-            <Label Content="mm" HorizontalAlignment="Left" Margin="146,60,0,0" VerticalAlignment="Top" Height="30" Width="67" FontSize="16"/>
-            <Label Content="mm" HorizontalAlignment="Left" Margin="146,117,0,0" VerticalAlignment="Top" Height="30" Width="67" FontSize="16"/>
-            <Label Content="N" HorizontalAlignment="Left" Margin="377,60,0,0" VerticalAlignment="Top" Height="30" Width="33" FontSize="16"/>
-            <Label Content="N" HorizontalAlignment="Left" Margin="377,117,0,0" VerticalAlignment="Top" Height="30" Width="39" FontSize="16"/>
-            <Button x:Name="force_btm" Content="負荷計算" HorizontalAlignment="Left" Margin="56,157,0,0" VerticalAlignment="Top" Width="85" Height="36" FontSize="16" Click="Force_btm_Click"/>
-            <Label Content="向上為正" HorizontalAlignment="Left" Margin="287,166,0,0" VerticalAlignment="Top" Width="79" Height="27" FontSize="16" RenderTransformOrigin="0.481,0.222"/>
-            <Button x:Name="P_pic_btm" Content="顯示負荷圖示" HorizontalAlignment="Left" Margin="315,14,0,0" VerticalAlignment="Top" Width="113" Height="36" FontSize="16" Click="P_pic_btm_Click"/>
+            <Label Content="B" HorizontalAlignment="Left" Margin="10,50,0,0" VerticalAlignment="Top" Height="30" Width="46" FontSize="16" RenderTransformOrigin="0.478,0.333"/>
+            <TextBox x:Name="B_length" HorizontalAlignment="Left" Height="30" Margin="56,50,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="85" FontSize="16" GotFocus="B_length_GotFocus"/>
+            <Label Content="C" HorizontalAlignment="Left" Margin="10,90,0,0" VerticalAlignment="Top" Height="30" Width="46" FontSize="16"/>
+            <TextBox x:Name="C_length" HorizontalAlignment="Left" Height="30" Margin="56,90,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="85" FontSize="16" GotFocus="C_length_GotFocus"/>
+            <Label Content="P1" HorizontalAlignment="Left" Margin="236,10,0,0" VerticalAlignment="Top" Height="30" Width="46" FontSize="16"/>
+            <TextBox x:Name="P1_force" HorizontalAlignment="Left" Height="30" Margin="287,10,0,0" TextWrapping="Wrap" Text="-200" VerticalAlignment="Top" Width="85" FontSize="16" GotFocus="P1_force_GotFocus"/>
+            <Label Content="P2" HorizontalAlignment="Left" Margin="236,50,0,0" VerticalAlignment="Top" Height="30" Width="46" FontSize="16"/>
+            <TextBox x:Name="P2_force" HorizontalAlignment="Left" Height="30" Margin="287,50,0,0" TextWrapping="Wrap" Text="-100" VerticalAlignment="Top" Width="85" FontSize="16" GotFocus="P2_force_GotFocus"/>
+            <Label Content="mm" HorizontalAlignment="Left" Margin="146,11,0,0" VerticalAlignment="Top" Height="30" Width="67" FontSize="16"/>
+            <Label Content="mm" HorizontalAlignment="Left" Margin="146,50,0,0" VerticalAlignment="Top" Height="30" Width="67" FontSize="16"/>
+            <Label Content="mm" HorizontalAlignment="Left" Margin="146,90,0,0" VerticalAlignment="Top" Height="30" Width="53" FontSize="16"/>
+            <Label Content="N" HorizontalAlignment="Left" Margin="377,11,0,0" VerticalAlignment="Top" Height="30" Width="33" FontSize="16"/>
+            <Label Content="N" HorizontalAlignment="Left" Margin="377,50,0,0" VerticalAlignment="Top" Height="30" Width="39" FontSize="16"/>
+            <Button x:Name="force_btm" Content="負荷計算" HorizontalAlignment="Left" Margin="56,130,0,0" VerticalAlignment="Top" Width="85" Height="30" FontSize="16" Click="Force_btm_Click"/>
+            <Label Content="向上為正" HorizontalAlignment="Left" Margin="287,90,0,0" VerticalAlignment="Top" Width="85" Height="27" FontSize="16" RenderTransformOrigin="0.481,0.222"/>
+            <Button x:Name="P_pic_btm" Content="顯示負荷圖示" HorizontalAlignment="Left" Margin="268,127,0,0" VerticalAlignment="Top" Width="113" Height="36" FontSize="16" Click="P_pic_btm_Click"/>
         </Grid>
-        <Grid HorizontalAlignment="Left" Height="362" Margin="10,253,0,0" VerticalAlignment="Top" Width="216" Background="#FFEDF370" Grid.Column="1" Grid.RowSpan="2">
+        <Grid HorizontalAlignment="Left" Height="362" Margin="0,231,0,0" VerticalAlignment="Top" Width="216" Background="#FFEDF370" Grid.Row="2">
             <Grid.RowDefinitions>
                 <RowDefinition/>
             </Grid.RowDefinitions>
@@ -105,11 +108,11 @@
             <TextBox x:Name="fv" HorizontalAlignment="Left" Height="23" Margin="109,330,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="44" RenderTransformOrigin="6.386,-6.435"/>
             <Label Content="N" HorizontalAlignment="Left" Margin="164,326,0,0" VerticalAlignment="Top" Width="33"/>
         </Grid>
-        <Grid HorizontalAlignment="Left" Height="362" Margin="235,253,0,0" VerticalAlignment="Top" Width="216" Background="#FFEDF370" Grid.Column="1" Grid.RowSpan="2">
+        <Grid Height="362" Margin="229,229,5,0" VerticalAlignment="Top" Background="#FFEDF370" Grid.Row="2">
             <Grid.RowDefinitions>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <Label Content="選擇後軸承" HorizontalAlignment="Left" Margin="10,67,0,0" VerticalAlignment="Top" Width="116" RenderTransformOrigin="0.371,-0.12" FontSize="20"/>
+            <Label Content="選擇後軸承" HorizontalAlignment="Left" Margin="10,45,0,0" VerticalAlignment="Top" Width="116" RenderTransformOrigin="0.371,-0.12" FontSize="20"/>
             <ComboBox x:Name="angle1" HorizontalAlignment="Left" Margin="104,148,0,0" VerticalAlignment="Top" Width="88" Height="26" SelectedIndex="0" DropDownClosed="Angle_DropDownClosed">
                 <Button Content="15°"/>
                 <Button Content="20°"/>
@@ -120,14 +123,14 @@
                 <Button Content="深溝軸承"/>
             </ComboBox>
             <Label Content="接觸角" HorizontalAlignment="Left" Margin="21,152,0,0" VerticalAlignment="Top" Width="69" RenderTransformOrigin="0.464,1.96"/>
-            <Label Content="選用軸承" HorizontalAlignment="Left" Margin="21,122,0,0" VerticalAlignment="Top" Width="64" RenderTransformOrigin="0.5,-0.04"/>
+            <Label Content="選用軸承" HorizontalAlignment="Left" Margin="21,107,0,0" VerticalAlignment="Top" Width="64" RenderTransformOrigin="0.5,-0.04"/>
             <Label Content="軸承配置" HorizontalAlignment="Left" Margin="26,182,0,0" VerticalAlignment="Top" Width="64"/>
             <ComboBox x:Name="b_con1" HorizontalAlignment="Left" Margin="104,179,0,0" VerticalAlignment="Top" Width="88" Height="25" SelectedIndex="1" RenderTransformOrigin="-0.761,13.48" DropDownClosed="B_con_DropDownClosed">
                 <Button Content="並聯"/>
                 <Button Content="DB/DF"/>
             </ComboBox>
             <Label Content="基本額定靜負荷" HorizontalAlignment="Left" Margin="0,207,0,0" VerticalAlignment="Top" Width="98"/>
-            <TextBox x:Name="c1" HorizontalAlignment="Left" Height="23" Margin="104,209,0,0" TextWrapping="Wrap" Text="20000" VerticalAlignment="Top" Width="63"/>
+            <TextBox x:Name="c01" HorizontalAlignment="Left" Height="23" Margin="104,209,0,0" TextWrapping="Wrap" Text="20000" VerticalAlignment="Top" Width="63"/>
             <Label Content="軸承數" HorizontalAlignment="Left" Margin="26,269,0,0" VerticalAlignment="Top"/>
             <TextBox x:Name="i_nofb1" HorizontalAlignment="Left" Height="23" Margin="111,269,0,0" TextWrapping="Wrap" Text="2" VerticalAlignment="Top" Width="47"/>
             <TextBox x:Name="c_single1" HorizontalAlignment="Left" Height="23" Margin="104,241,0,0" TextWrapping="Wrap" Text="19500" VerticalAlignment="Top" Width="63"/>
@@ -135,16 +138,16 @@
             <Label Content="N" HorizontalAlignment="Left" Margin="173,209,0,0" VerticalAlignment="Top" Width="33"/>
             <Label Content="N" HorizontalAlignment="Left" Margin="173,239,0,0" VerticalAlignment="Top" Width="33" RenderTransformOrigin="0.667,1.6"/>
             <Label Content="節圓直徑" HorizontalAlignment="Left" Margin="12,299,0,0" VerticalAlignment="Top" Width="94"/>
-            <TextBox HorizontalAlignment="Left" Height="23" Margin="111,299,0,0" TextWrapping="Wrap" Text="70" VerticalAlignment="Top" Width="47"/>
+            <TextBox x:Name="dm1" HorizontalAlignment="Left" Height="23" Margin="111,299,0,0" TextWrapping="Wrap" Text="70" VerticalAlignment="Top" Width="47"/>
             <Label Content="mm" HorizontalAlignment="Left" Margin="167,299,0,0" VerticalAlignment="Top" Width="33"/>
             <Label Content="後軸承徑向負荷" HorizontalAlignment="Left" Margin="6,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.517,0" FontSize="16"/>
             <TextBox x:Name="fr1" HorizontalAlignment="Left" Height="23" Margin="133,14,0,0" TextWrapping="Wrap" Text="700" VerticalAlignment="Top" Width="67" FontSize="16"/>
             <Label Content="預壓力" HorizontalAlignment="Left" Margin="54,329,0,0" VerticalAlignment="Top"/>
-            <TextBox x:Name="fv_Copy" HorizontalAlignment="Left" Height="23" Margin="111,329,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="44" RenderTransformOrigin="6.386,-6.435"/>
+            <TextBox x:Name="fv1" HorizontalAlignment="Left" Height="23" Margin="111,329,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="44" RenderTransformOrigin="6.386,-6.435"/>
             <Label Content="N" HorizontalAlignment="Left" Margin="167,329,0,0" VerticalAlignment="Top" Width="33" RenderTransformOrigin="0.667,1.6"/>
         </Grid>
-        <Button Content="計算" HorizontalAlignment="Left" Margin="380,850,0,0" VerticalAlignment="Top" Width="71" Height="34" Click="Button_Click" RenderTransformOrigin="3.718,-0.5" Grid.Column="1" Grid.RowSpan="2"/>
-        <Grid Height="338" VerticalAlignment="Top" Margin="1126,259,-372,0" Background="#FF879CE4" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Left" Width="239">
+        <Button Content="計算" Margin="370,10,13,7" Click="Button_Click" RenderTransformOrigin="3.718,-0.5" Grid.Row="3"/>
+        <Grid Height="338" VerticalAlignment="Top" Margin="5,235,5,0" Background="#FF879CE4" Grid.Row="2" Grid.Column="2">
             <Grid.RowDefinitions>
                 <RowDefinition/>
             </Grid.RowDefinitions>
@@ -191,7 +194,7 @@
             <Button x:Name="clean_btm" Content="參考表" HorizontalAlignment="Left" Margin="181,44,0,0" VerticalAlignment="Top" Width="49" RenderTransformOrigin="0.293,0.579" Height="25" Click="Clean_btm_Click"/>
             <Button x:Name="v_btm" Content="運行黏度表" HorizontalAlignment="Left" Margin="140,92,0,0" VerticalAlignment="Top" Width="83" Height="32" Click="V_btm_Click"/>
         </Grid>
-        <Grid HorizontalAlignment="Left" Height="213" Margin="235,628,0,0" VerticalAlignment="Top" Width="216" Background="#FF14CDCD" Grid.Row="1" Grid.Column="1">
+        <Grid Margin="229,596,5,0" Background="#FF14CDCD" Grid.Row="2">
             <TextBox x:Name="life1" Height="23" Margin="97,84,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="76" IsReadOnly="True"/>
             <Label Content="基本額定壽命" HorizontalAlignment="Left" Margin="10,82,0,0" VerticalAlignment="Top" Width="82"/>
             <Label Content="後軸承壽命" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" Width="156" RenderTransformOrigin="0.371,-0.12" FontSize="20"/>
@@ -207,9 +210,8 @@
             <TextBox x:Name="life3" HorizontalAlignment="Left" Height="23" Margin="97,125,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="76" IsReadOnly="True"/>
             <Label Content="延長壽命" HorizontalAlignment="Left" Margin="20,123,0,0" VerticalAlignment="Top" Width="65"/>
         </Grid>
-        <Image x:Name="Chart" Margin="456,36,-117,0" HorizontalAlignment="Left" Width="654" Height="805" VerticalAlignment="Top" Grid.Column="1" Grid.RowSpan="2"/>
-        <Menu Grid.ColumnSpan="2" HorizontalAlignment="Left" Height="31" Grid.RowSpan="2" VerticalAlignment="Top" Width="1376" Margin="0,0,-382,0"/>
-        <Grid Grid.Column="1" HorizontalAlignment="Left" Height="118" Margin="1125,602,-372,0" Grid.RowSpan="2" VerticalAlignment="Top" Width="240" Background="#FF2C97D4">
+        <Image x:Name="Chart" Margin="0" Grid.Row="2" Grid.Column="1"/>
+        <Grid Height="120" Margin="5,598,5,0" VerticalAlignment="Top" Background="#FF2C97D4" Grid.Row="2" Grid.Column="2">
             <TextBox x:Name="k" HorizontalAlignment="Left" Height="23" Margin="42,40,0,0" TextWrapping="Wrap" Text="0.1" VerticalAlignment="Top" Width="39" IsReadOnly="True"/>
             <Label Content="k" HorizontalAlignment="Left" Margin="10,40,0,0" VerticalAlignment="Top"/>
             <Label Content="ec*Cu/p" HorizontalAlignment="Left" Margin="101,40,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.607,2.52"/>
@@ -219,7 +221,7 @@
             <Button x:Name="aiso_btm" Content="圖表" HorizontalAlignment="Left" Margin="175,78,0,0" VerticalAlignment="Top" Width="46" Height="23" Click="Aiso_btm_Click" RenderTransformOrigin="0.696,-0.043"/>
             <Label Content="前軸承調整係數" HorizontalAlignment="Left" Margin="7,0,0,0" VerticalAlignment="Top" FontSize="20"/>
         </Grid>
-        <Grid Grid.Column="1" HorizontalAlignment="Left" Height="118" Margin="1125,734,-372,0" Grid.RowSpan="2" VerticalAlignment="Top" Width="240" Background="#FF2C97D4">
+        <Grid Margin="5,737,5,0" Background="#FF2C97D4" Grid.Row="2" Grid.Column="2" Height="120" VerticalAlignment="Top" Grid.RowSpan="2">
             <TextBox x:Name="k1" HorizontalAlignment="Left" Height="23" Margin="42,40,0,0" TextWrapping="Wrap" Text="0.1" VerticalAlignment="Top" Width="39" IsReadOnly="True"/>
             <Label Content="k" HorizontalAlignment="Left" Margin="10,40,0,0" VerticalAlignment="Top"/>
             <Label Content="ec*Cu/p" HorizontalAlignment="Left" Margin="101,40,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.607,2.52"/>
@@ -229,7 +231,24 @@
             <Button x:Name="aiso_btm1" Content="圖表" HorizontalAlignment="Left" Margin="175,78,0,0" VerticalAlignment="Top" Width="46" Height="23" Click="Aiso_btm_Click" RenderTransformOrigin="0.696,-0.043"/>
             <Label Content="後軸承調整係數" HorizontalAlignment="Left" Margin="7,0,0,0" VerticalAlignment="Top" FontSize="20"/>
         </Grid>
-        <Button x:Name="Life1_btm" Content="顯示公式" HorizontalAlignment="Left" Margin="14,850,0,0" VerticalAlignment="Top" Width="61" Height="30" Click="Life1_btm_Click" Grid.Column="1" Grid.RowSpan="2"/>
+        <Button x:Name="Life1_btm" Content="顯示公式" HorizontalAlignment="Left" Margin="10,7,0,7" Width="63" Click="Life1_btm_Click" Grid.Row="3"/>
+        <Menu Margin="0" Grid.RowSpan="2" Grid.ColumnSpan="3">
+            <Button x:Name="saveroute" FontSize="16" Content="選擇儲存路徑" Click="Saveroute_Click"
+      />
+            <Button x:Name="loadspindle_btm" Content="載入主軸" FontSize="16" Click="Loadspindle_btm_Click"/>
+        </Menu>
+        <Grid Grid.Column="1" Margin="0,7,0,0" Grid.Row="3" Background="#FF55AFD1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200*"/>
+                <ColumnDefinition Width="201*"/>
+            </Grid.ColumnDefinitions>
+        </Grid>
+        <Grid HorizontalAlignment="Left" Height="60" Margin="0" Grid.Row="2" VerticalAlignment="Top" Width="449" Background="#FFB8A6A6">
+            <TextBox x:Name="spindlename" HorizontalAlignment="Left" Height="33" Margin="76,17,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="105" FontSize="18" Text="TEST"/>
+            <Label Content="主軸：" HorizontalAlignment="Left" Margin="10,17,0,0" VerticalAlignment="Top" Width="61" FontSize="18"/>
+            <Button x:Name="savespindle_btm" Content="儲存主軸" HorizontalAlignment="Left" Margin="208,17,0,0" VerticalAlignment="Top" Width="86" Height="33" FontSize="18" Click="Savespindle_btm_Click"/>
+            <Button x:Name="saveplan_btm" Content="儲存方案" HorizontalAlignment="Left" Margin="326,13,0,0" VerticalAlignment="Top" Width="92" Height="37" FontSize="18" Click="Saveplan_btm_Click"/>
+        </Grid>
 
     </Grid>
 </Window>

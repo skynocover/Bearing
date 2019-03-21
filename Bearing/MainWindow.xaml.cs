@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -13,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
+using Microsoft.Win32;
 
 namespace Bearing
 {
@@ -26,43 +28,32 @@ namespace Bearing
             InitializeComponent();
         }
         //將前後負荷變成全域變數
-        //前後負荷在使用時要變成ABS
-        //函數帶入數值而非寫死
-        //注意黏度v1可能需要兩個
         //確認是否使用延長壽命 可能有問題
+
+        //將不必要的全域變數刪掉
+        //軸向負荷修改成單輸入 (軸向力使用全域變數)
+        //C15要檢查參數 軸承類型 接觸角 配置方式
+        //深溝跟滾珠沒有多餘的計算函式
+        //補上後軸承計算式
+
         #region 宣告
-        
+        public string Route;
+
+        public string[,] Plan = new string[5, 35] ;
+
+
         //共用輸入
         public int Rpm;//轉速
         public double Ka; //軸向力
-
-        public int Hours;//一天使用時數
-        public int Days;//一年使用天數
-        
-        //共用輸出
-        public double Aiso;//壽命調整係數
-
-        //前軸承輸入
-        public int Cs; //額定動負荷
-        public int i; //軸承個數
-        public double Fv; //預壓力
+       
         //前軸承輸出
-        public double C;//額定動負荷
-        public double Fa; //軸向負荷
-        public double X;//徑向係數
-        public double Y;//軸向係數
         public double P_1;//徑向當量動負荷
-
-
-
-        //後軸承輸入
-
         //後軸承輸出
-
+        public double P_2;//徑向當量動負荷
+        
         #endregion
 
         #region 參數
-
         //失效概率
         public double[] A1 = new double[6] { 0.25, 0.37, 0.47, 0.55, 0.64, 1 };
         //最大運行溫度
@@ -89,79 +80,226 @@ namespace Bearing
                                                       { { 2.78, 2.4, 2.07, 1.87, 1.75, 1.58, 1.39, 1.26, 1.21 }, { 3.74, 3.23, 2.78, 2.52, 2.36, 2.13, 1.87, 1.69, 1.63 } } };
         #endregion
 
-
-
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            load(); //載入參數
             checkornot(false, -1); //不使用check
             Chart.Source = new BitmapImage(new Uri(@"resource/p1p2.png", UriKind.Relative)); //中央圖片載入
         }
-        
-        private void load() //將所有輸入載入
-        {
-            //共用
-             Rpm = Int32.Parse(rpm.Text);//轉速
-             Ka = Int32.Parse(ka.Text); //軸向力
-            
-
-            
-
-            //後軸承
-
-        }
-
         private void Calculate() //所有的計算
         {
-            load(); //載入參數
-
-            //輸入參數
-            double fv_1 = Int32.Parse(fv.Text); //預壓力
+            //共用參數
+            Rpm = Int32.Parse(rpm.Text);//轉速
+            Ka = Int32.Parse(ka.Text); //軸向力
+            #region 前軸承
+            //前軸承輸入參數
+            double fr_1 = Math.Abs(Int32.Parse(fr.Text)); //徑向力
+            int b_1 = bearing.SelectedIndex; //軸承類型
+            int bran_1 = b_con.SelectedIndex; //軸承配置
+            int a_1 = angle.SelectedIndex; //接觸角類型
+            double c0_1 = Int32.Parse(c0.Text);//額定靜負荷
             double cs_1 = Int32.Parse(c_single.Text); //單顆額定動負荷
             int i_1 = Int32.Parse(i_nofb.Text); //軸承個數
-            double c0_1 = Int32.Parse(c0.Text);//靜負荷
-            int b_1 = b_con.SelectedIndex;
-            int a_1 = angle.SelectedIndex;
-            double fr_1 =Math.Abs( Int32.Parse(fr.Text));
+            double fv_1 = Int32.Parse(fv.Text); //預壓力 
             
-
-            //輸出用參數
-            double fa_1;
-            double c_1;
-            double x_1;
-            double y_1;
-            double life_1;
-            double year_1;
+            //前軸承輸出參數
+            double fa_1; //軸向負荷
+            double c_1;  //額定動負荷
+            double x_1;  //x係數
+            double y_1;  //y係數
+            double life_1; //輸出壽命(小時)
+            double life2_1;//輸出額外壽命(小時)
+            double year_1; //壽命轉換年
             
-
             //前軸承計算
-            fa_1 =  F_calculate(Ka,fv_1); //軸向負荷計算
+            fa_1 =  F_calculate(fv_1); //軸向負荷計算
             c_1 =C_calculate(i_1, cs_1); //額定動負荷計算
-            X_Y_calculate(i_1,fa_1,c0_1,b_1, a_1, fr_1,out x_1,out y_1); //XY係數計算
+            X_Y_calculate(i_1, fa_1, c0_1,b_1, bran_1, a_1, fr_1, out x_1, out y_1); //XY係數計算
             P_1 = P_calculate(x_1,y_1,fr_1,fa_1); //當量軸承負荷計算
             life_1=Life_calculate(c_1, P_1); //額定壽命計算
             year_1 = Year_calculate(life_1); //換算年
 
-            p.Text = Math.Round(P_1, 2).ToString();//輸出當量動負荷
-            life.Text = Math.Round(life_1, 0).ToString();//輸出壽命小時
+            p.Text = Math.Round(P_1, 2).ToString();//顯示當量動負荷
+            life.Text = Math.Round(life_1, 0).ToString();//顯示壽命小時
             if (uselife2.IsChecked ==true) //輸出小時
             {
                 double aiso = Int32.Parse(life_p.Text);
-                double life2_1 =life_1 * aiso * Ft[Tempture.SelectedIndex] * A1[lost_chance.SelectedIndex];
-                year_1 = Year_calculate(life2_1);
+                life2_1 =life_1 * aiso * Ft[Tempture.SelectedIndex] * A1[lost_chance.SelectedIndex];
                 life2.Text = Math.Round(life2_1, 0).ToString();
+                year_1 = Year_calculate(life2_1);
             }
-            else{ }
             Life_year.Text = Math.Round(year_1, 2).ToString();
+            #endregion
+
+            #region 後軸承
+            //後軸承輸入參數
+            double fr_2 = Math.Abs(Int32.Parse(fr.Text)); //徑向力
+            int b_2 = bearing1.SelectedIndex; //軸承類型
+            int bran_2 = b_con1.SelectedIndex; //軸承配置
+            int a_2 = angle1.SelectedIndex; //接觸角類型
+            double c0_2 = Int32.Parse(c01.Text);//額定靜負荷
+            double cs_2 = Int32.Parse(c_single1.Text); //單顆額定動負荷
+            int i_2 = Int32.Parse(i_nofb1.Text); //軸承個數
+            double fv_2 = Int32.Parse(fv1.Text); //預壓力 
+
+            //後軸承輸出參數
+            double fa_2; //軸向負荷
+            double c_2;  //額定動負荷
+            double x_2;  //x係數
+            double y_2;  //y係數
+            double life_2; //輸出壽命(小時)
+            double life2_2;//輸出額外壽命(小時)
+            double year_2; //壽命轉換年
+
+            //後軸承計算
+            fa_2 = F_calculate(fv_2); //軸向負荷計算
+            c_2 = C_calculate(i_2, cs_2); //額定動負荷計算
+            X_Y_calculate(i_2, fa_2, c0_2, b_2, bran_2, a_2, fr_2, out x_2, out y_2); //XY係數計算
+            P_2 = P_calculate(x_2, y_2, fr_2, fa_2); //當量軸承負荷計算
+            life_2 = Life_calculate(c_2, P_2); //額定壽命計算
+            year_2 = Year_calculate(life_2); //換算年
+
+            p1.Text = Math.Round(P_2, 2).ToString();//顯示當量動負荷
+            life1.Text = Math.Round(life_2, 0).ToString();//顯示壽命小時
+            if (uselife2.IsChecked == true) //輸出小時
+            {
+                double aiso = Int32.Parse(life_p1.Text);
+                life2_2 = life_2 * aiso * Ft[Tempture.SelectedIndex] * A1[lost_chance.SelectedIndex];
+                life3.Text = Math.Round(life2_2, 0).ToString();
+                year_2 = Year_calculate(life2_2);
+            }
+            Life_year1.Text = Math.Round(year_2, 2).ToString();
+            #endregion
+        }
+
+        private void X_Y_calculate(int i, double fa, double c0, int b,int bran, int a, double fr, out double x, out double y) //XY係數
+        {
+            //i 軸承個數
+            //fa //軸向負荷
+            //c0 額定靜負荷
+            //b 軸承類型
+            //bran 軸承配置
+            //a 接觸角類型
+            //fr 徑向力
+
+            double parameter = i * fa / c0; //相對軸向負荷
+
+            if (b == 0) //主軸軸承
+            {
+                if (a == 2) //25度接觸角計算
+                {
+                    int p1 = bran;//第一維:配置
+                    int p2;
+                    if (fa / fr <= 0.68) { p2 = 0; } else { p2 = 1; } //第二維:參數
+
+                    x = A_25[p1, p2, 0];
+                    y = A_25[p1, p2, 1];
+                }
+                else if (a == 1)//20度接觸角計算
+                {
+                    int p1 = bran; //第一維:配置
+                    int p2;
+                    if (fa / fr <= 0.57) { p2 = 0; } else { p2 = 1; }//第二維:參數
+
+                    x = A_20[p1, p2, 0];   //第三維第一項:X
+                    y = A_20[p1, p2, 1]; //第三維第二項:Y
+                }
+                else //15度接觸角計算
+                {
+                    //抓出最接近的數字
+                    double min = 999;
+                    int kk = 0;
+                    for (int ii = 0; ii < 9; ii++)
+                    {
+                        if (Math.Abs(parameter - A_15[ii]) < min)
+                        {
+                            min = Math.Abs(parameter - A_15[ii]);
+                            kk = ii;
+                        }
+                    }
+                    //抓出ee值
+                    double ee = Aee[kk];
+
+                    int p1 = b_con.SelectedIndex;//軸承配置
+                    int p2;
+                    if (fa / fr <= ee) { p2 = 0; } else { p2 = 1; }//大小
+                    x = A_15X[p1, p2];
+                    y = A_15Y[p1, p2, kk];
+                }
+            }
+            else //深溝軸承
+            {
+                //抓出最接近的數字
+                double min = 999;
+                int kk = 0;
+                for (int ii = 0; ii < 9; ii++)
+                {
+                    if (Math.Abs(parameter - DG[ii]) < min)
+                    {
+                        min = Math.Abs(parameter - DG[ii]);
+                        kk = ii;
+                    }
+                }
+                //抓出ee值
+                double ee = DGee[kk];
+
+                int p1 = b_con.SelectedIndex;//軸承配置
+                int p2;
+                if (fa / fr <= ee) { p2 = 0; } else { p2 = 1; }//大小
+                x= DGX[p1, p2];
+                y = DGY[p1, p2, kk];
+
+            }
         }
        
 
+        private double C_calculate(double ii, double cs) //額定動負荷計算
+        {
+            return Math.Pow(ii, 0.7) * cs;
+        }
 
+        private double F_calculate(double fv) //軸向負荷計算
+        {
+            if (Ka > 3 * fv)
+            {
+                return Ka;
+            }
+            else
+            {
+                return fv + 0.67 * Ka;
+            }
+        }
+
+        private double P_calculate(double x,double y , double fr,double fa) //當量的軸承負荷計算
+        {
+            return x * fr + y * fa;
+        }
+
+        private double F_calculate(double ka, double fv) //軸向負荷計算
+        {
+            if (ka > 3 * fv)
+            {
+                return ka;
+            }
+            else
+            {
+                return fv + 0.67 * ka;
+            }
+        }
+        
+        private double Year_calculate( double hour)  //壽命換算時間
+        {
+            double p1 = Int32.Parse(Hour_day.Text);
+            double p2 = Int32.Parse(Day_year.Text);
+            return hour / p1 / p2;
+        }
+
+        #region 額外壽命
         private void Aiso_calculate() //壽命調整係數計算
         {
+            //前軸承
             //輸入
             double v1_1 = Int32.Parse(v1.Text); //前軸承參考黏度            
-            double dm_1 = Int32.Parse( dm.Text); //前軸承dm
+            double dm_1 = Int32.Parse(dm.Text); //前軸承dm
             double c0_1 = Int32.Parse(c0.Text); //前軸承靜負荷
             //計算
             double k_1 = k_calculate(v1_1); //黏度比計算
@@ -169,8 +307,19 @@ namespace Bearing
             //顯示
             k.Text = Math.Round(k_1, 2).ToString();
             eccup.Text = Math.Round(eccup_1, 2).ToString();
-        }
 
+            //後軸承
+            //輸入
+            double v1_2 = Int32.Parse(v3.Text); //前軸承參考黏度            
+            double dm_2 = Int32.Parse(dm1.Text); //前軸承dm
+            double c0_2 = Int32.Parse(c01.Text); //前軸承靜負荷
+            //計算
+            double k_2 = k_calculate(v1_1); //黏度比計算
+            double eccup_2 = eccup_calculate(dm_1, c0_1, P_1); //前軸承eccup計算
+            //顯示
+            k1.Text = Math.Round(k_2, 2).ToString();
+            eccup1.Text = Math.Round(eccup_2, 2).ToString();
+        }
         private double k_calculate(double v1) //黏度比計算
         {
             double p1 = Math.Log(Int32.Parse(v40.Text) / Int32.Parse(v100.Text), Math.E);
@@ -180,7 +329,6 @@ namespace Bearing
 
             return v / v1;
         }
-
         private double eccup_calculate(double dm, double c0, double p) //調整係數計算
         {
             double cu;
@@ -198,144 +346,12 @@ namespace Bearing
             return ec * cu / p;
         }
 
-        
-
         private double Life_calculate(double c, double p)//額定壽命計算 輸入額定動負荷C 當量動負荷P 使用全域變數Rpm
         {
             return 1000000 / 60 / Rpm * Math.Pow(c / p, 3);
         }
-
-        private double P_calculate(double x,double y , double fr,double fa) //當量的軸承負荷計算
-        {
-            return x * fr + y * fa;
-        }
-
-        private void X_Y_calculate(int i , double fa , double c0,int b,int a,double fr,out double x , out double y) //XY係數
-        {
-            double parameter = i * fa / c0; //相對軸向負荷
-
-            if (b == 0) //主軸軸承
-            {
-                if (a == 0) //15度接觸角計算
-                {
-                    double XX;
-                    double YY;
-
-                    C15(fa,fr,parameter, out XX, out YY);
-
-                    x = XX;
-                    y = YY;
-                }
-                else if (a == 1)//20度接觸角計算
-                {
-                    int p1 = b; //第一維:配置
-                    int p2;
-                    if (fa / fr <= 0.57) { p2 = 0; } else { p2 = 1; }//第二維:參數
-
-                    x = A_20[p1, p2, 0];   //第三維第一項:X
-                    y = A_20[p1, p2, 1]; //第三維第二項:Y
-                }
-                else //25度接觸角計算
-                {
-                    int p1 = b;
-                    int p2;
-                    if (fa / fr <= 0.68) { p2 = 0; } else { p2 = 1; }
-
-                    x = A_25[p1, p2, 0];
-                    y = A_25[p1, p2, 1];
-                }
-            }
-            else //深溝軸承
-            {
-                double XX;
-                double YY;
-
-                DGcal(fa,fr,parameter, out XX, out YY);
-
-                x = XX;
-                y = YY;
-            }
-        }
-        
-        private double F_calculate(double ka, double fv) //軸向負荷計算
-        {
-            if (ka > 3 * fv)
-            {
-                return ka;
-            }
-            else
-            {
-                return fv + 0.67 * ka;
-            }
-        }
-        
-        private double C_calculate(double ii, double cs) //額定動負荷計算
-        {
-            return Math.Pow(ii, 0.7) * cs;
-        }
-        
-        private void C15(double fa, double fr,double parameter, out double XX, out double YY) //15度接觸角計算
-        {
-            //抓出最接近的數字
-            double min = 999;
-            int kk = 0;
-            for (int i = 0; i < 9; i++)
-            {
-                if (Math.Abs(parameter - A_15[i]) < min)
-                {
-                    min = Math.Abs(parameter - A_15[i]);
-                    kk = i;
-                }
-            }
-            //抓出ee值
-            double ee = Aee[kk];
-
-            int p1 = b_con.SelectedIndex;//軸承配置
-            int p2;
-            if (fa / fr <= ee) { p2 = 0; } else { p2 = 1; }//大小
-            XX = A_15X[p1, p2];
-            YY = A_15Y[p1, p2, kk];
-        }
-
-        public void DGcal(double fa,double fr ,double parameter, out double XX, out double YY)  //深溝軸承計算
-        {
-            //抓出最接近的數字
-            double min = 999;
-            int kk = 0;
-            for (int i = 0; i < 9; i++)
-            {
-                if (Math.Abs(parameter - DG[i]) < min)
-                {
-                    min = Math.Abs(parameter - DG[i]);
-                    kk = i;
-                }
-            }
-            //抓出ee值
-            double ee = DGee[kk];
-
-            int p1 = b_con.SelectedIndex;//軸承配置
-            int p2;
-            if (fa / fr <= ee) { p2 = 0; } else { p2 = 1; }//大小
-            XX = DGX[p1, p2];
-            YY = DGY[p1, p2, kk];
-        }
-
-        private double Year_calculate( double hour)  //壽命換算時間
-        {
-            double p1 = Int32.Parse(Hour_day.Text);
-            double p2 = Int32.Parse(Day_year.Text);
-            return hour / p1 / p2;
-        }
-        
-       
-
-        #region 延長壽命 目前空的
-       
-
-        
-        
         #endregion
-
+       
         //確認是否使用延長壽命
         private void checkornot(bool b,int s)
         {
@@ -547,8 +563,211 @@ namespace Bearing
             Chart.Source = bitmap;
             Chart.EndInit();
         }
+
         #endregion
 
-        
+
+        //儲存路徑按鈕
+        private void Saveroute_Click(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.route = System.Environment.CurrentDirectory;
+            FolderBrowserDialog dilog = new FolderBrowserDialog();
+
+            dilog.SelectedPath = Properties.Settings.Default.route;
+            dilog.ShowDialog();
+            Properties.Settings.Default.route = dilog.SelectedPath;
+        }
+       
+
+        private void Main_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            Properties.Settings.Default.Save();
+        }
+
+        private void Savespindle_btm_Click(object sender, RoutedEventArgs e)
+        {
+            if (spindlename.Text == "")
+            {
+                System.Windows.Forms.MessageBox.Show("請輸入主軸名稱");
+            }
+            else
+            {
+                string filename = spindlename.Text + ".txt";
+
+                string folderName = Properties.Settings.Default.route;
+
+                string pathString = System.IO.Path.Combine(folderName, filename);
+
+                if (File.Exists(pathString))
+                {
+                    File.Delete(pathString);
+                }
+                writein(pathString);
+            }
+        }
+        private void writein(string path)
+        {
+            saveplan();
+
+            FileStream fs = File.Create(path);
+            fs.Close();
+
+            StreamWriter sw = new StreamWriter(path);
+
+            for (int i = 0; i < 35; i++)
+            {
+                sw.WriteLine(Plan[0, i] );
+            }
+            
+            sw.Close();
+        }
+        private void saveplan()
+        {
+            Plan[0, 0] = A_length.Text;
+            Plan[0, 1] = B_length.Text;
+            Plan[0, 2] = C_length.Text;
+            Plan[0, 3] = P1_force.Text;
+            Plan[0, 4] = P2_force.Text;
+
+            //前軸承
+            Plan[0, 5] = bearing.SelectedIndex.ToString();
+            Plan[0, 6] = angle.SelectedIndex.ToString();
+            Plan[0, 7] = b_con.SelectedIndex.ToString();
+            Plan[0, 8] = c0.Text;
+            Plan[0, 9] = c_single.Text;
+            Plan[0, 10] = i_nofb.Text;
+            Plan[0, 11] = dm.Text;
+            Plan[0, 12] = fv.Text;
+            //後軸承
+            Plan[0, 13] = bearing1.SelectedIndex.ToString();
+            Plan[0, 14] = angle1.SelectedIndex.ToString();
+            Plan[0, 15] = b_con1.SelectedIndex.ToString();
+            Plan[0, 16] = c01.Text;
+            Plan[0, 17] = c_single1.Text;
+            Plan[0, 18] = i_nofb1.Text;
+            Plan[0, 19] = dm1.Text;
+            Plan[0, 20] = fv1.Text;
+
+            //加工與負荷
+            Plan[0, 21] = rpm.Text;
+            Plan[0, 22] = Hour_day.Text;
+            Plan[0, 23] = Day_year.Text;
+            Plan[0, 24] = ka.Text;
+
+            //額外壽命
+            Plan[0, 25] = clean.SelectedIndex.ToString();
+            Plan[0, 26] = v40.Text;
+            Plan[0, 27] = v100.Text;
+            Plan[0, 28] = tb.Text;
+            Plan[0, 29] = v1.Text;
+            Plan[0, 30] = v3.Text;
+            Plan[0, 31] = lost_chance.SelectedIndex.ToString();
+            Plan[0, 32] = Tempture.SelectedIndex.ToString();
+            Plan[0, 33] = life_p.Text;
+            Plan[0, 34] = life_p1.Text;
+        }
+
+        private void Saveplan_btm_Click(object sender, RoutedEventArgs e)
+        {
+            saveplan();
+        }
+
+        private void Loadspindle_btm_Click(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Forms.OpenFileDialog dialog = new System.Windows.Forms.OpenFileDialog();
+            dialog.InitialDirectory = Properties.Settings.Default.route;
+            dialog.ShowDialog();
+            
+            loadspindle(dialog.FileName);
+
+            puttext();
+        }
+        private void loadspindle(string filename)
+        {
+            StreamReader file = new StreamReader(filename);
+            
+            Plan[0, 0] = file.ReadLine();
+            Plan[0, 1] = file.ReadLine();
+            Plan[0, 2] = file.ReadLine();
+            Plan[0, 3] = file.ReadLine();
+            Plan[0, 4] = file.ReadLine();
+            Plan[0, 5] = file.ReadLine();
+            Plan[0, 6] = file.ReadLine();
+            Plan[0, 7] = file.ReadLine();
+            Plan[0, 8] = file.ReadLine();
+            Plan[0, 9] = file.ReadLine();
+            Plan[0, 10] = file.ReadLine();
+            Plan[0, 11] = file.ReadLine();
+            Plan[0, 12] = file.ReadLine();
+            Plan[0, 13] = file.ReadLine();
+            Plan[0, 14] = file.ReadLine();
+            Plan[0, 15] = file.ReadLine();
+            Plan[0, 16] = file.ReadLine();
+            Plan[0, 17] = file.ReadLine();
+            Plan[0, 18] = file.ReadLine();
+            Plan[0, 19] = file.ReadLine();
+            Plan[0, 20] = file.ReadLine();
+            Plan[0, 21] = file.ReadLine();
+            Plan[0, 22] = file.ReadLine();
+            Plan[0, 23] = file.ReadLine();
+            Plan[0, 24] = file.ReadLine();
+            Plan[0, 25] = file.ReadLine();
+            Plan[0, 26] = file.ReadLine();
+            Plan[0, 27] = file.ReadLine();
+            Plan[0, 28] = file.ReadLine();
+            Plan[0, 29] = file.ReadLine();
+            Plan[0, 30] = file.ReadLine();
+            Plan[0, 31] = file.ReadLine();
+            Plan[0, 32] = file.ReadLine();
+            Plan[0, 33] = file.ReadLine();
+            Plan[0, 34] = file.ReadLine();
+        }
+
+        private void puttext()
+        {
+
+            A_length.Text = Plan[0, 0];
+            B_length.Text = Plan[0, 1];
+            C_length.Text = Plan[0, 2];
+             P1_force.Text = Plan[0, 3];
+            P2_force.Text = Plan[0, 4];
+
+            //前軸承
+            bearing.SelectedIndex =Int32.Parse( Plan[0, 5]);
+            angle.SelectedIndex = Int32.Parse(Plan[0, 6]);
+            b_con.SelectedIndex = Int32.Parse(Plan[0, 7]);
+            c0.Text = Plan[0, 8];
+            c_single.Text = Plan[0, 9];
+            i_nofb.Text = Plan[0, 10];
+            dm.Text = Plan[0, 11];
+            fv.Text = Plan[0, 12];
+            //後軸承
+              bearing1.SelectedIndex= Int32.Parse(Plan[0, 13]);
+            angle1.SelectedIndex =Int32.Parse( Plan[0, 14]);
+              b_con1.SelectedIndex = Int32.Parse(Plan[0, 15]);
+            c01.Text = Plan[0, 16];
+             c_single1.Text = Plan[0, 17];
+              i_nofb1.Text = Plan[0, 18];
+             dm1.Text = Plan[0, 19];
+             fv1.Text = Plan[0, 20];
+
+            //加工與負荷
+              rpm.Text = Plan[0, 21];
+              Hour_day.Text = Plan[0, 22];
+             Day_year.Text = Plan[0, 23];
+             ka.Text = Plan[0, 24];
+
+            //額外壽命
+             clean.SelectedIndex = Int32.Parse(Plan[0, 25]);
+            v40.Text = Plan[0, 26];
+            v100.Text = Plan[0, 27];
+             tb.Text = Plan[0, 28];
+            v1.Text = Plan[0, 29];
+            v3.Text = Plan[0, 30];
+            lost_chance.SelectedIndex = Int32.Parse(Plan[0, 31]);
+            Tempture.SelectedIndex = Int32.Parse(Plan[0, 32]);
+            life_p.Text = Plan[0, 33];
+            life_p1.Text = Plan[0, 34];
+        }
     }
 }
