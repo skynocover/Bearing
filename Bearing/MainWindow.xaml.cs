@@ -447,6 +447,23 @@ namespace Bearing
 
             Calculate();
         }
+        
+        private void Bearing1_DropDownClosed(object sender, EventArgs e)
+        {
+            if (bearing1.SelectedIndex == 0)
+            {
+                angle1.IsEnabled = true;
+                angle1.SelectedIndex = 0;
+            }
+            else
+            {
+                angle1.IsEnabled = false;
+                angle1.SelectedIndex = -1;
+            }
+
+            Calculate();
+        }
+
         #region 圖表顯示按鈕
 
         //顯示壽命公式
@@ -769,5 +786,7 @@ namespace Bearing
             life_p.Text = Plan[0, 33];
             life_p1.Text = Plan[0, 34];
         }
+
+        
     }
 }
