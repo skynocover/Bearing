@@ -30,16 +30,19 @@ namespace Bearing
         //將前後負荷變成全域變數
         //確認是否使用延長壽命 可能有問題
 
-        //將不必要的全域變數刪掉
         //軸向負荷修改成單輸入 (軸向力使用全域變數)
         //C15要檢查參數 軸承類型 接觸角 配置方式
         //深溝跟滾珠沒有多餘的計算函式
-        //補上後軸承計算式
-
+        
         #region 宣告
-        public string Route;
+        public string Route; //儲存路徑
+        public string[,] Plan = new string[5, 35]; //放置方案陣列 
+        public int Plannum = 0; //當前共幾個方案
+        public int Plannow = 0; //當前是第幾個方案
+        //public int 
 
-        public string[,] Plan = new string[5, 35] ;
+        
+        
 
 
         //共用輸入
@@ -80,11 +83,13 @@ namespace Bearing
                                                       { { 2.78, 2.4, 2.07, 1.87, 1.75, 1.58, 1.39, 1.26, 1.21 }, { 3.74, 3.23, 2.78, 2.52, 2.36, 2.13, 1.87, 1.69, 1.63 } } };
         #endregion
 
+        #region 主功能
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             checkornot(false, -1); //不使用check
             Chart.Source = new BitmapImage(new Uri(@"resource/p1p2.png", UriKind.Relative)); //中央圖片載入
         }
+
         private void Calculate() //所有的計算
         {
             //共用參數
@@ -92,7 +97,7 @@ namespace Bearing
             Ka = Int32.Parse(ka.Text); //軸向力
             #region 前軸承
             //前軸承輸入參數
-            double fr_1 = Math.Abs(Int32.Parse(fr.Text)); //徑向力
+            double fr_1 = Math.Abs(Convert.ToDouble(fr.Text)); //徑向力
             int b_1 = bearing.SelectedIndex; //軸承類型
             int bran_1 = b_con.SelectedIndex; //軸承配置
             int a_1 = angle.SelectedIndex; //接觸角類型
@@ -132,7 +137,7 @@ namespace Bearing
 
             #region 後軸承
             //後軸承輸入參數
-            double fr_2 = Math.Abs(Int32.Parse(fr.Text)); //徑向力
+            double fr_2 = Math.Abs(Convert.ToDouble(fr1.Text)); //徑向力
             int b_2 = bearing1.SelectedIndex; //軸承類型
             int bran_2 = b_con1.SelectedIndex; //軸承配置
             int a_2 = angle1.SelectedIndex; //接觸角類型
@@ -251,7 +256,6 @@ namespace Bearing
             }
         }
        
-
         private double C_calculate(double ii, double cs) //額定動負荷計算
         {
             return Math.Pow(ii, 0.7) * cs;
@@ -292,6 +296,7 @@ namespace Bearing
             double p2 = Int32.Parse(Day_year.Text);
             return hour / p1 / p2;
         }
+        #endregion
 
         #region 額外壽命
         private void Aiso_calculate() //壽命調整係數計算
@@ -350,10 +355,9 @@ namespace Bearing
         {
             return 1000000 / 60 / Rpm * Math.Pow(c / p, 3);
         }
-        #endregion
-       
+
         //確認是否使用延長壽命
-        private void checkornot(bool b,int s)
+        private void checkornot(bool b, int s)
         {
             lost_chance.IsEnabled = b;
             lost_chance.SelectedIndex = s;
@@ -392,7 +396,8 @@ namespace Bearing
             aisoC_btm.IsEnabled = b;
 
         }
-
+        #endregion
+       
         #region 按鈕
 
         //計算修正係數按鈕
@@ -539,29 +544,6 @@ namespace Bearing
         }
         #endregion
 
-        #region 負荷計算模組
-
-        private void Force_btm_Click(object sender, RoutedEventArgs e)
-        {
-            P1P2_calculate();
-        }
-        private void P1P2_calculate()
-        {
-            double a = Int32.Parse(A_length.Text);
-            double b = Int32.Parse(B_length.Text);
-            double c = Int32.Parse(C_length.Text);
-            double p1 = Int32.Parse(P1_force.Text);
-            double p2 = Int32.Parse(P2_force.Text);
-
-            double bforce = (-p1 * (a + b) + p2 * c) / b; //前軸承
-            double b1force = (p1 * a - p2 * (b + c)) / b; //後軸承
-
-            fr.Text = Math.Round(bforce, 2).ToString();
-            fr1.Text = Math.Round(b1force, 2).ToString();
-        }
-
-        #endregion
-
         #region 用不到的東西
         //顯示圖片
         private void showimg(string name)
@@ -583,24 +565,58 @@ namespace Bearing
 
         #endregion
 
+        #region 負荷計算模組
+
+        private void Force_btm_Click(object sender, RoutedEventArgs e)
+        {
+            P1P2_calculate();
+        }
+        private void P1P2_calculate()
+        {
+            double a = Convert.ToDouble(A_length.Text);
+            double b = Convert.ToDouble(B_length.Text);
+            double c = Convert.ToDouble(C_length.Text);
+            double p1 = Convert.ToDouble(P1_force.Text);
+            double p2 = Convert.ToDouble(P2_force.Text);
+
+            double bforce = (-p1 * (a + b) + p2 * c) / b; //前軸承
+            double b1force = (p1 * a - p2 * (b + c)) / b; //後軸承
+
+            fr.Text = Math.Round(bforce, 1).ToString();
+            fr1.Text = Math.Round(b1force, 1).ToString();
+        }
+
+        #endregion
+
+        #region 載入與儲存模組
 
         //儲存路徑按鈕
         private void Saveroute_Click(object sender, RoutedEventArgs e)
         {
-            Properties.Settings.Default.route = System.Environment.CurrentDirectory;
-            FolderBrowserDialog dilog = new FolderBrowserDialog();
+            if (Properties.Settings.Default.route =="") //若尚未做選擇
+            {
+                Properties.Settings.Default.route = System.Environment.CurrentDirectory; //預設目錄使用檔案目前目錄
+            }
 
-            dilog.SelectedPath = Properties.Settings.Default.route;
+            FolderBrowserDialog dilog = new FolderBrowserDialog(); 
+            dilog.SelectedPath = Properties.Settings.Default.route; //使用預設目錄
             dilog.ShowDialog();
-            Properties.Settings.Default.route = dilog.SelectedPath;
-        }
-       
 
+            if (dilog.SelectedPath=="")
+            {
+                Properties.Settings.Default.route = System.Environment.CurrentDirectory;
+            }
+            else
+            {
+                Properties.Settings.Default.route = dilog.SelectedPath;  
+            }
+        }
+        //程式關閉
         private void Main_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             Properties.Settings.Default.Save();
         }
-
+        //主軸儲存按鈕
         private void Savespindle_btm_Click(object sender, RoutedEventArgs e)
         {
             if (spindlename.Text == "")
@@ -610,183 +626,197 @@ namespace Bearing
             else
             {
                 string filename = spindlename.Text + ".txt";
-
                 string folderName = Properties.Settings.Default.route;
-
                 string pathString = System.IO.Path.Combine(folderName, filename);
 
                 if (File.Exists(pathString))
                 {
                     File.Delete(pathString);
                 }
+                saveplan(Plannow);
                 writein(pathString);
             }
         }
-        private void writein(string path)
-        {
-            saveplan();
-
-            FileStream fs = File.Create(path);
-            fs.Close();
-
-            StreamWriter sw = new StreamWriter(path);
-
-            for (int i = 0; i < 35; i++)
-            {
-                sw.WriteLine(Plan[0, i] );
-            }
-            
-            sw.Close();
-        }
-        private void saveplan()
-        {
-            Plan[0, 0] = A_length.Text;
-            Plan[0, 1] = B_length.Text;
-            Plan[0, 2] = C_length.Text;
-            Plan[0, 3] = P1_force.Text;
-            Plan[0, 4] = P2_force.Text;
-
-            //前軸承
-            Plan[0, 5] = bearing.SelectedIndex.ToString();
-            Plan[0, 6] = angle.SelectedIndex.ToString();
-            Plan[0, 7] = b_con.SelectedIndex.ToString();
-            Plan[0, 8] = c0.Text;
-            Plan[0, 9] = c_single.Text;
-            Plan[0, 10] = i_nofb.Text;
-            Plan[0, 11] = dm.Text;
-            Plan[0, 12] = fv.Text;
-            //後軸承
-            Plan[0, 13] = bearing1.SelectedIndex.ToString();
-            Plan[0, 14] = angle1.SelectedIndex.ToString();
-            Plan[0, 15] = b_con1.SelectedIndex.ToString();
-            Plan[0, 16] = c01.Text;
-            Plan[0, 17] = c_single1.Text;
-            Plan[0, 18] = i_nofb1.Text;
-            Plan[0, 19] = dm1.Text;
-            Plan[0, 20] = fv1.Text;
-
-            //加工與負荷
-            Plan[0, 21] = rpm.Text;
-            Plan[0, 22] = Hour_day.Text;
-            Plan[0, 23] = Day_year.Text;
-            Plan[0, 24] = ka.Text;
-
-            //額外壽命
-            Plan[0, 25] = clean.SelectedIndex.ToString();
-            Plan[0, 26] = v40.Text;
-            Plan[0, 27] = v100.Text;
-            Plan[0, 28] = tb.Text;
-            Plan[0, 29] = v1.Text;
-            Plan[0, 30] = v3.Text;
-            Plan[0, 31] = lost_chance.SelectedIndex.ToString();
-            Plan[0, 32] = Tempture.SelectedIndex.ToString();
-            Plan[0, 33] = life_p.Text;
-            Plan[0, 34] = life_p1.Text;
-        }
-
+        //儲存方案按鈕
         private void Saveplan_btm_Click(object sender, RoutedEventArgs e)
         {
-            saveplan();
+            saveplan(Plannow);
         }
-
+        //載入主軸按鈕
         private void Loadspindle_btm_Click(object sender, RoutedEventArgs e)
         {
             System.Windows.Forms.OpenFileDialog dialog = new System.Windows.Forms.OpenFileDialog();
             dialog.InitialDirectory = Properties.Settings.Default.route;
-            dialog.ShowDialog();
-            
-            loadspindle(dialog.FileName);
+            dialog.ShowDialog(); //使用預設目錄開啟視窗
 
-            puttext();
+            if (dialog.FileName != "")
+            {
+                //Properties.Settings.Default.route = dialog.  儲存選擇的路徑
+                loadspindle(dialog.FileName);
+
+                puttext(0);
+                P1P2_calculate();
+                Chart.Source = new BitmapImage(new Uri(@"resource/p1p2.png", UriKind.Relative)); //中央圖片載入
+            }
         }
+        
+        //方法 所有陣列寫入ini
+        private void writein(string path)
+        {
+            FileStream fs = File.Create(path);
+            fs.Close();
+
+            StreamWriter sw = new StreamWriter(path);
+            for (int i = 0; i < 35; i++)
+            {
+                sw.WriteLine(Plan[0, i] );
+            }
+            sw.Close();
+        }
+
+        //方法 載入ini至所有陣列
         private void loadspindle(string filename)
         {
             StreamReader file = new StreamReader(filename);
-            
-            Plan[0, 0] = file.ReadLine();
-            Plan[0, 1] = file.ReadLine();
-            Plan[0, 2] = file.ReadLine();
-            Plan[0, 3] = file.ReadLine();
-            Plan[0, 4] = file.ReadLine();
-            Plan[0, 5] = file.ReadLine();
-            Plan[0, 6] = file.ReadLine();
-            Plan[0, 7] = file.ReadLine();
-            Plan[0, 8] = file.ReadLine();
-            Plan[0, 9] = file.ReadLine();
-            Plan[0, 10] = file.ReadLine();
-            Plan[0, 11] = file.ReadLine();
-            Plan[0, 12] = file.ReadLine();
-            Plan[0, 13] = file.ReadLine();
-            Plan[0, 14] = file.ReadLine();
-            Plan[0, 15] = file.ReadLine();
-            Plan[0, 16] = file.ReadLine();
-            Plan[0, 17] = file.ReadLine();
-            Plan[0, 18] = file.ReadLine();
-            Plan[0, 19] = file.ReadLine();
-            Plan[0, 20] = file.ReadLine();
-            Plan[0, 21] = file.ReadLine();
-            Plan[0, 22] = file.ReadLine();
-            Plan[0, 23] = file.ReadLine();
-            Plan[0, 24] = file.ReadLine();
-            Plan[0, 25] = file.ReadLine();
-            Plan[0, 26] = file.ReadLine();
-            Plan[0, 27] = file.ReadLine();
-            Plan[0, 28] = file.ReadLine();
-            Plan[0, 29] = file.ReadLine();
-            Plan[0, 30] = file.ReadLine();
-            Plan[0, 31] = file.ReadLine();
-            Plan[0, 32] = file.ReadLine();
-            Plan[0, 33] = file.ReadLine();
-            Plan[0, 34] = file.ReadLine();
+
+            for (int i = 0; i < 5; i++)
+            {
+                for (int j = 0; j < 35; j++)
+                {
+                    Plan[i, j] = file.ReadLine();
+                }
+            }
         }
 
-        private void puttext()
+        //方法 將陣列目錄放入textbox
+        private void puttext(int order)
         {
-
-            A_length.Text = Plan[0, 0];
-            B_length.Text = Plan[0, 1];
-            C_length.Text = Plan[0, 2];
-             P1_force.Text = Plan[0, 3];
-            P2_force.Text = Plan[0, 4];
+            A_length.Text = Plan[order, 0];
+            B_length.Text = Plan[order, 1];
+            C_length.Text = Plan[order, 2];
+            P1_force.Text = Plan[order, 3];
+            P2_force.Text = Plan[order, 4];
 
             //前軸承
-            bearing.SelectedIndex =Int32.Parse( Plan[0, 5]);
-            angle.SelectedIndex = Int32.Parse(Plan[0, 6]);
-            b_con.SelectedIndex = Int32.Parse(Plan[0, 7]);
-            c0.Text = Plan[0, 8];
-            c_single.Text = Plan[0, 9];
-            i_nofb.Text = Plan[0, 10];
-            dm.Text = Plan[0, 11];
-            fv.Text = Plan[0, 12];
+            bearing.SelectedIndex =Int32.Parse( Plan[order, 5]);
+            angle.SelectedIndex = Int32.Parse(Plan[order, 6]);
+            b_con.SelectedIndex = Int32.Parse(Plan[order, 7]);
+            c0.Text = Plan[order, 8];
+            c_single.Text = Plan[order, 9];
+            i_nofb.Text = Plan[order, 10];
+            dm.Text = Plan[order, 11];
+            fv.Text = Plan[order, 12];
             //後軸承
-              bearing1.SelectedIndex= Int32.Parse(Plan[0, 13]);
-            angle1.SelectedIndex =Int32.Parse( Plan[0, 14]);
-              b_con1.SelectedIndex = Int32.Parse(Plan[0, 15]);
-            c01.Text = Plan[0, 16];
-             c_single1.Text = Plan[0, 17];
-              i_nofb1.Text = Plan[0, 18];
-             dm1.Text = Plan[0, 19];
-             fv1.Text = Plan[0, 20];
+             bearing1.SelectedIndex= Int32.Parse(Plan[order, 13]);
+             angle1.SelectedIndex =Int32.Parse( Plan[order, 14]);
+             b_con1.SelectedIndex = Int32.Parse(Plan[order, 15]);
+             c01.Text = Plan[order, 16];
+             c_single1.Text = Plan[order, 17];
+             i_nofb1.Text = Plan[order, 18];
+             dm1.Text = Plan[order, 19];
+             fv1.Text = Plan[order, 20];
 
             //加工與負荷
-              rpm.Text = Plan[0, 21];
-              Hour_day.Text = Plan[0, 22];
-             Day_year.Text = Plan[0, 23];
-             ka.Text = Plan[0, 24];
+             rpm.Text = Plan[order, 21];
+             Hour_day.Text = Plan[order, 22];
+             Day_year.Text = Plan[order, 23];
+             ka.Text = Plan[order, 24];
 
             //額外壽命
-             clean.SelectedIndex = Int32.Parse(Plan[0, 25]);
-            v40.Text = Plan[0, 26];
-            v100.Text = Plan[0, 27];
-             tb.Text = Plan[0, 28];
-            v1.Text = Plan[0, 29];
-            v3.Text = Plan[0, 30];
-            lost_chance.SelectedIndex = Int32.Parse(Plan[0, 31]);
-            Tempture.SelectedIndex = Int32.Parse(Plan[0, 32]);
-            life_p.Text = Plan[0, 33];
-            life_p1.Text = Plan[0, 34];
+             clean.SelectedIndex = Int32.Parse(Plan[order, 25]);
+             v40.Text = Plan[order, 26];
+             v100.Text = Plan[order, 27];
+             tb.Text = Plan[order, 28];
+             v1.Text = Plan[order, 29];
+             v3.Text = Plan[order, 30];
+             lost_chance.SelectedIndex = Int32.Parse(Plan[order, 31]);
+             Tempture.SelectedIndex = Int32.Parse(Plan[order, 32]);
+             life_p.Text = Plan[order, 33];
+             life_p1.Text = Plan[order, 34];
         }
 
         
+
+
+        //方法 將textbox放至想要的陣列目錄
+        private void saveplan(int order)
+        {
+            Plan[order, 0] = A_length.Text;
+            Plan[order, 1] = B_length.Text;
+            Plan[order, 2] = C_length.Text;
+            Plan[order, 3] = P1_force.Text;
+            Plan[order, 4] = P2_force.Text;
+
+            //前軸承
+            Plan[order, 5] = bearing.SelectedIndex.ToString();
+            Plan[order, 6] = angle.SelectedIndex.ToString();
+            Plan[order, 7] = b_con.SelectedIndex.ToString();
+            Plan[order, 8] = c0.Text;
+            Plan[order, 9] = c_single.Text;
+            Plan[order, 10] = i_nofb.Text;
+            Plan[order, 11] = dm.Text;
+            Plan[order, 12] = fv.Text;
+            //後軸承
+            Plan[order, 13] = bearing1.SelectedIndex.ToString();
+            Plan[order, 14] = angle1.SelectedIndex.ToString();
+            Plan[order, 15] = b_con1.SelectedIndex.ToString();
+            Plan[order, 16] = c01.Text;
+            Plan[order, 17] = c_single1.Text;
+            Plan[order, 18] = i_nofb1.Text;
+            Plan[order, 19] = dm1.Text;
+            Plan[order, 20] = fv1.Text;
+
+            //加工與負荷
+            Plan[order, 21] = rpm.Text;
+            Plan[order, 22] = Hour_day.Text;
+            Plan[order, 23] = Day_year.Text;
+            Plan[order, 24] = ka.Text;
+
+            //額外壽命
+            Plan[order, 25] = clean.SelectedIndex.ToString();
+            Plan[order, 26] = v40.Text;
+            Plan[order, 27] = v100.Text;
+            Plan[order, 28] = tb.Text;
+            Plan[order, 29] = v1.Text;
+            Plan[order, 30] = v3.Text;
+            Plan[order, 31] = lost_chance.SelectedIndex.ToString();
+            Plan[order, 32] = Tempture.SelectedIndex.ToString();
+            Plan[order, 33] = life_p.Text;
+            Plan[order, 34] = life_p1.Text;
+
+            //System.Windows.Controls.TextBox[] txt = new System.Windows.Controls.TextBox[] {
+            //        A_length, B_length, C_length, P1_force,P2_force, //負荷計算
+            //        c0 ,c_single ,i_nofb ,dm,fv  , //前軸承
+            //        c01,c_single1,i_nofb1,dm1,fv1, //後軸承
+            //        rpm,Hour_day,Day_year,ka,  //加工與負荷
+            //        v40,v100,tb,v1,v3,life_p,life_p1};  //額外壽命            
+
+            //System.Windows.Controls.ComboBox[] combo = new System.Windows.Controls.ComboBox[] {
+            //        bearing,angle,b_con,
+            //        bearing1,angle1,b_con1,
+            //        clean,lost_chance,Tempture };
+
+    
+            // Plan[0, 0] = txt[0].Text;
+        }
+
+        //public void load()
+        //{
+        //    public System.Windows.Controls.TextBox[] txt = new System.Windows.Controls.TextBox[] {
+        //        A_length, B_length, C_length, P1_force,P2_force, //負荷計算
+        //        c0 ,c_single ,i_nofb ,dm,fv  , //前軸承
+        //        c01,c_single1,i_nofb1,dm1,fv1, //後軸承
+        //        rpm,Hour_day,Day_year,ka,  //加工與負荷
+        //        v40,v100,tb,v1,v3,life_p,life_p1};  //額外壽命            
+
+        //    System.Windows.Controls.ComboBox[] combo = new System.Windows.Controls.ComboBox[] {
+        //        bearing,angle,b_con,
+        //        bearing1,angle1,b_con1,
+        //        clean,lost_chance,Tempture };
+
+        //}
+
+        #endregion
+
     }
 }
