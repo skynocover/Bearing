@@ -27,13 +27,14 @@ namespace Bearing
         {
             InitializeComponent();
         }
-        
-        
+
         #region 宣告
         public string Route; //儲存路徑
-        public string[,] Plan = new string[5, 35]; //放置方案陣列 
+        public string[,] Plan = new string[5, 37]; //放置方案陣列 
         public int Plannum = 0; //當前共幾個方案
         public int Plannow = 0; //當前是第幾個方案
+        public System.Windows.Controls.TextBox[] txt = new System.Windows.Controls.TextBox[28]; //text陣列
+        public System.Windows.Controls.ComboBox[] combo = new System.Windows.Controls.ComboBox[9]; //combo陣列
 
         //共用輸入
         public double Rpm;//轉速
@@ -659,9 +660,13 @@ namespace Bearing
             fs.Close();
 
             StreamWriter sw = new StreamWriter(path);
-            for (int i = 0; i < 35; i++)
+            sw.WriteLine(Plannum.ToString());
+            for (int i = 0; i < 5; i++)
             {
-                sw.WriteLine(Plan[0, i] );
+                for (int j = 0; j < 37; j++)
+                {
+                    sw.WriteLine(Plan[i, j]);
+                }
             }
             sw.Close();
         }
@@ -671,6 +676,7 @@ namespace Bearing
         {
             StreamReader file = new StreamReader(filename);
 
+            Plannum = Int32.Parse(file.ReadLine());
             for (int i = 0; i < 5; i++)
             {
                 for (int j = 0; j < 35; j++)
@@ -678,141 +684,145 @@ namespace Bearing
                     Plan[i, j] = file.ReadLine();
                 }
             }
+            file.Close();
         }
-
-        //方法 將陣列目錄放入textbox
-        private void puttext(int order)
+        private void load() //宣告新陣列 txt及combo
         {
-            A_length.Text = Plan[order, 0];
-            B_length.Text = Plan[order, 1];
-            C_length.Text = Plan[order, 2];
-            P1_force.Text = Plan[order, 3];
-            P2_force.Text = Plan[order, 4];
+            txt = new System.Windows.Controls.TextBox[28]
+            { A_length, B_length, C_length, P1_force,P2_force, //負荷計算
+            bname ,c0 ,c_single ,i_nofb ,dm,fv  , //前軸承
+            bname1, c01,c_single1,i_nofb1,dm1,fv1, //後軸承
+            rpm,Hour_day,Day_year,ka,  //加工與負荷
+            v40,v100,tb,v1,v3,life_p,life_p1};  //額外壽命   
 
-            //前軸承
-            bearing.SelectedIndex =Int32.Parse( Plan[order, 5]);
-            angle.SelectedIndex = Int32.Parse(Plan[order, 6]);
-            b_con.SelectedIndex = Int32.Parse(Plan[order, 7]);
-            c0.Text = Plan[order, 8];
-            c_single.Text = Plan[order, 9];
-            i_nofb.Text = Plan[order, 10];
-            dm.Text = Plan[order, 11];
-            fv.Text = Plan[order, 12];
-            //後軸承
-             bearing1.SelectedIndex= Int32.Parse(Plan[order, 13]);
-             angle1.SelectedIndex = Int32.Parse( Plan[order, 14]);
-             b_con1.SelectedIndex = Int32.Parse(Plan[order, 15]);
-             c01.Text = Plan[order, 16];
-             c_single1.Text = Plan[order, 17];
-             i_nofb1.Text = Plan[order, 18];
-             dm1.Text = Plan[order, 19];
-             fv1.Text = Plan[order, 20];
 
-            //加工與負荷
-             rpm.Text = Plan[order, 21];
-             Hour_day.Text = Plan[order, 22];
-             Day_year.Text = Plan[order, 23];
-             ka.Text = Plan[order, 24];
-
-            //額外壽命
-             clean.SelectedIndex = Int32.Parse(Plan[order, 25]);
-             v40.Text = Plan[order, 26];
-             v100.Text = Plan[order, 27];
-             tb.Text = Plan[order, 28];
-             v1.Text = Plan[order, 29];
-             v3.Text = Plan[order, 30];
-             lost_chance.SelectedIndex = Int32.Parse(Plan[order, 31]);
-             Tempture.SelectedIndex = Int32.Parse(Plan[order, 32]);
-             life_p.Text = Plan[order, 33];
-             life_p1.Text = Plan[order, 34];
+            combo = new System.Windows.Controls.ComboBox[9]{
+                bearing,angle,b_con,
+                bearing1,angle1,b_con1,
+                clean,lost_chance,Tempture };
         }
 
+        private void saveplan(int order) //方法 將textbox放至想要的陣列目錄
+        {
+            load();
+            for (int i = 0; i < 28; i++)
+            {
+                Plan[order, i] = txt[i].Text;
+            }
+            for (int i = 0; i < 9; i++)
+            {
+                Plan[order, 28 + i] = combo[i].SelectedIndex.ToString();
+            }
+            #region //無效程式碼
+            //Plan[order, 0] = A_length.Text;
+            //Plan[order, 1] = B_length.Text;
+            //Plan[order, 2] = C_length.Text;
+            //Plan[order, 3] = P1_force.Text;
+            //Plan[order, 4] = P2_force.Text;
+
+            ////前軸承
+            //Plan[order, 5] = bearing.SelectedIndex.ToString();
+            //Plan[order, 6] = angle.SelectedIndex.ToString();
+            //Plan[order, 7] = b_con.SelectedIndex.ToString();
+            //Plan[order, 8] = c0.Text;
+            //Plan[order, 9] = c_single.Text;
+            //Plan[order, 10] = i_nofb.Text;
+            //Plan[order, 11] = dm.Text;
+            //Plan[order, 12] = fv.Text;
+            ////後軸承
+            //Plan[order, 13] = bearing1.SelectedIndex.ToString();
+            //Plan[order, 14] = angle1.SelectedIndex.ToString();
+            //Plan[order, 15] = b_con1.SelectedIndex.ToString();
+            //Plan[order, 16] = c01.Text;
+            //Plan[order, 17] = c_single1.Text;
+            //Plan[order, 18] = i_nofb1.Text;
+            //Plan[order, 19] = dm1.Text;
+            //Plan[order, 20] = fv1.Text;
+
+            ////加工與負荷
+            //Plan[order, 21] = rpm.Text;
+            //Plan[order, 22] = Hour_day.Text;
+            //Plan[order, 23] = Day_year.Text;
+            //Plan[order, 24] = ka.Text;
+
+            ////額外壽命
+            //Plan[order, 25] = clean.SelectedIndex.ToString();
+            //Plan[order, 26] = v40.Text;
+            //Plan[order, 27] = v100.Text;
+            //Plan[order, 28] = tb.Text;
+            //Plan[order, 29] = v1.Text;
+            //Plan[order, 30] = v3.Text;
+            //Plan[order, 31] = lost_chance.SelectedIndex.ToString();
+            //Plan[order, 32] = Tempture.SelectedIndex.ToString();
+            //Plan[order, 33] = life_p.Text;
+            //Plan[order, 34] = life_p1.Text;
+            #endregion 
+        }
+        private void puttext(int order) //方法 將陣列目錄放入textbox
+        {
+            load();
+            for (int i = 0; i < 28; i++)
+            {
+                txt[i].Text = Plan[order, i];
+            }
+            for (int i = 0; i < 9; i++)
+            {
+                combo[i].SelectedIndex = Int32.Parse(Plan[order, 28 + i]);
+            }
+            #region 無效程式碼
+            //A_length.Text = Plan[order, 0];
+            //B_length.Text = Plan[order, 1];
+            //C_length.Text = Plan[order, 2];
+            //P1_force.Text = Plan[order, 3];
+            //P2_force.Text = Plan[order, 4];
+
+            ////前軸承
+            //bearing.SelectedIndex = Int32.Parse(Plan[order, 5]);
+            //angle.SelectedIndex = Int32.Parse(Plan[order, 6]);
+            //b_con.SelectedIndex = Int32.Parse(Plan[order, 7]);
+            //c0.Text = Plan[order, 8];
+            //c_single.Text = Plan[order, 9];
+            //i_nofb.Text = Plan[order, 10];
+            //dm.Text = Plan[order, 11];
+            //fv.Text = Plan[order, 12];
+            ////後軸承
+            //bearing1.SelectedIndex = Int32.Parse(Plan[order, 13]);
+            //angle1.SelectedIndex = Int32.Parse(Plan[order, 14]);
+            //b_con1.SelectedIndex = Int32.Parse(Plan[order, 15]);
+            //c01.Text = Plan[order, 16];
+            //c_single1.Text = Plan[order, 17];
+            //i_nofb1.Text = Plan[order, 18];
+            //dm1.Text = Plan[order, 19];
+            //fv1.Text = Plan[order, 20];
+
+            ////加工與負荷
+            //rpm.Text = Plan[order, 21];
+            //Hour_day.Text = Plan[order, 22];
+            //Day_year.Text = Plan[order, 23];
+            //ka.Text = Plan[order, 24];
+
+            ////額外壽命
+            //clean.SelectedIndex = Int32.Parse(Plan[order, 25]);
+            //v40.Text = Plan[order, 26];
+            //v100.Text = Plan[order, 27];
+            //tb.Text = Plan[order, 28];
+            //v1.Text = Plan[order, 29];
+            //v3.Text = Plan[order, 30];
+            //lost_chance.SelectedIndex = Int32.Parse(Plan[order, 31]);
+            //Tempture.SelectedIndex = Int32.Parse(Plan[order, 32]);
+            //life_p.Text = Plan[order, 33];
+            //life_p1.Text = Plan[order, 34];
+            #endregion
+        }
+        
+       
         
 
-
-        //方法 將textbox放至想要的陣列目錄
-        private void saveplan(int order)
-        {
-            Plan[order, 0] = A_length.Text;
-            Plan[order, 1] = B_length.Text;
-            Plan[order, 2] = C_length.Text;
-            Plan[order, 3] = P1_force.Text;
-            Plan[order, 4] = P2_force.Text;
-
-            //前軸承
-            Plan[order, 5] = bearing.SelectedIndex.ToString();
-            Plan[order, 6] = angle.SelectedIndex.ToString();
-            Plan[order, 7] = b_con.SelectedIndex.ToString();
-            Plan[order, 8] = c0.Text;
-            Plan[order, 9] = c_single.Text;
-            Plan[order, 10] = i_nofb.Text;
-            Plan[order, 11] = dm.Text;
-            Plan[order, 12] = fv.Text;
-            //後軸承
-            Plan[order, 13] = bearing1.SelectedIndex.ToString();
-            Plan[order, 14] = angle1.SelectedIndex.ToString();
-            Plan[order, 15] = b_con1.SelectedIndex.ToString();
-            Plan[order, 16] = c01.Text;
-            Plan[order, 17] = c_single1.Text;
-            Plan[order, 18] = i_nofb1.Text;
-            Plan[order, 19] = dm1.Text;
-            Plan[order, 20] = fv1.Text;
-
-            //加工與負荷
-            Plan[order, 21] = rpm.Text;
-            Plan[order, 22] = Hour_day.Text;
-            Plan[order, 23] = Day_year.Text;
-            Plan[order, 24] = ka.Text;
-
-            //額外壽命
-            Plan[order, 25] = clean.SelectedIndex.ToString();
-            Plan[order, 26] = v40.Text;
-            Plan[order, 27] = v100.Text;
-            Plan[order, 28] = tb.Text;
-            Plan[order, 29] = v1.Text;
-            Plan[order, 30] = v3.Text;
-            Plan[order, 31] = lost_chance.SelectedIndex.ToString();
-            Plan[order, 32] = Tempture.SelectedIndex.ToString();
-            Plan[order, 33] = life_p.Text;
-            Plan[order, 34] = life_p1.Text;
-
-            //System.Windows.Controls.TextBox[] txt = new System.Windows.Controls.TextBox[] {
-            //        A_length, B_length, C_length, P1_force,P2_force, //負荷計算
-            //        c0 ,c_single ,i_nofb ,dm,fv  , //前軸承
-            //        c01,c_single1,i_nofb1,dm1,fv1, //後軸承
-            //        rpm,Hour_day,Day_year,ka,  //加工與負荷
-            //        v40,v100,tb,v1,v3,life_p,life_p1};  //額外壽命            
-
-            //System.Windows.Controls.ComboBox[] combo = new System.Windows.Controls.ComboBox[] {
-            //        bearing,angle,b_con,
-            //        bearing1,angle1,b_con1,
-            //        clean,lost_chance,Tempture };
-
-
-            // Plan[0, 0] = txt[0].Text;
-        }
-
-        //public void load()
-        //{
-        //    public System.Windows.Controls.TextBox[] txt = new System.Windows.Controls.TextBox[] {
-        //        A_length, B_length, C_length, P1_force,P2_force, //負荷計算
-        //        c0 ,c_single ,i_nofb ,dm,fv  , //前軸承
-        //        c01,c_single1,i_nofb1,dm1,fv1, //後軸承
-        //        rpm,Hour_day,Day_year,ka,  //加工與負荷
-        //        v40,v100,tb,v1,v3,life_p,life_p1};  //額外壽命            
-
-        //System.Windows.Controls.ComboBox[] combo = new System.Windows.Controls.ComboBox[] {
-        //        bearing,angle,b_con,
-        //        bearing1,angle1,b_con1,
-        //        clean,lost_chance,Tempture };
-
-        // }
-
-    #endregion
+        #endregion
 
         #region 方案模組
         #region 按鈕
-        private void Plan1_btm_Click(object sender, RoutedEventArgs e)
+            private void Plan1_btm_Click(object sender, RoutedEventArgs e)
         {
 
         }

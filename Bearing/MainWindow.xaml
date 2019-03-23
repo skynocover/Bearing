@@ -108,7 +108,7 @@
             <Label Content="預壓力" HorizontalAlignment="Left" Margin="38,330,0,0" VerticalAlignment="Top"/>
             <TextBox x:Name="fv" HorizontalAlignment="Left" Height="23" Margin="109,330,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="44" RenderTransformOrigin="6.386,-6.435"/>
             <Label Content="N" HorizontalAlignment="Left" Margin="164,326,0,0" VerticalAlignment="Top" Width="33"/>
-            <TextBox HorizontalAlignment="Left" Height="30" Margin="108,80,0,0" TextWrapping="Wrap" Text="7016-L" VerticalAlignment="Top" Width="98" FontSize="16"/>
+            <TextBox x:Name="bname" HorizontalAlignment="Left" Height="30" Margin="108,80,0,0" TextWrapping="Wrap" Text="7016-L" VerticalAlignment="Top" Width="98" FontSize="16"/>
             <Label Content="型號" HorizontalAlignment="Left" Margin="53,85,0,0" VerticalAlignment="Top" Width="37" RenderTransformOrigin="0.5,-0.04"/>
         </Grid>
         <Grid Height="362" Margin="230,171,5,0" VerticalAlignment="Top" Background="#FFEDF370" Grid.Row="3" Width="220">
@@ -148,7 +148,7 @@
             <Label Content="預壓力" HorizontalAlignment="Left" Margin="54,329,0,0" VerticalAlignment="Top"/>
             <TextBox x:Name="fv1" HorizontalAlignment="Left" Height="23" Margin="111,329,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="44" RenderTransformOrigin="6.386,-6.435"/>
             <Label Content="N" HorizontalAlignment="Left" Margin="167,329,0,0" VerticalAlignment="Top" Width="33" RenderTransformOrigin="0.667,1.6"/>
-            <TextBox HorizontalAlignment="Left" Height="30" Margin="104,80,0,0" TextWrapping="Wrap" Text="7016-L" VerticalAlignment="Top" Width="102" FontSize="16"/>
+            <TextBox x:Name="bname1" HorizontalAlignment="Left" Height="30" Margin="104,80,0,0" TextWrapping="Wrap" Text="7016-L" VerticalAlignment="Top" Width="102" FontSize="16"/>
             <Label Content="型號" HorizontalAlignment="Left" Margin="43,85,0,0" VerticalAlignment="Top" Width="42" RenderTransformOrigin="0.5,-0.04"/>
         </Grid>
         <Button Content="計算" Margin="370,10,13,7" Click="Button_Click" RenderTransformOrigin="3.718,-0.5" Grid.Row="4"/>
