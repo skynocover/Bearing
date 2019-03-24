@@ -30,21 +30,18 @@ namespace Bearing
 
         #region 宣告
         public string Route; //儲存路徑
-        public string[,] Plan = new string[5, 37]; //放置方案陣列 
+        public string[,] Plan = new string[5, 39]; //放置方案陣列 
         public int Plannum = 0; //當前共幾個方案
-        public int Plannow = 0; //當前是第幾個方案
+        public int Plannow = 0; //現在顯示的是第幾個方案
         public System.Windows.Controls.TextBox[] txt = new System.Windows.Controls.TextBox[28]; //text陣列
         public System.Windows.Controls.ComboBox[] combo = new System.Windows.Controls.ComboBox[9]; //combo陣列
-
-        //共用輸入
-        public double Rpm;//轉速
-        public double Ka; //軸向力
-       
+        
         //前軸承輸出
         public double P_1;//徑向當量動負荷
+        public double C_1;//額定動負荷
         //後軸承輸出
         public double P_2;//徑向當量動負荷
-        
+        public double C_2;//額定動負荷
         #endregion
 
         #region 參數
@@ -80,12 +77,15 @@ namespace Bearing
             checkornot(false, -1); //不使用check
             Chart.Source = new BitmapImage(new Uri(@"resource/p1p2.png", UriKind.Relative)); //中央圖片載入
         }
+        private void Main_Closing(object sender, System.ComponentModel.CancelEventArgs e) //程式關閉
+        {
+            Properties.Settings.Default.Save();
+        }
 
-        private void Calculate() //所有的計算
+        private void CalculateCP() //CP計算
         {
             //共用參數
-            Rpm = Convert.ToDouble(rpm.Text);//轉速
-            Ka = Convert.ToDouble(ka.Text); //軸向力
+            double Ka = Convert.ToDouble(ka.Text); //軸向力
             #region 前軸承
             //前軸承輸入參數
             double fr_1 = Math.Abs(Convert.ToDouble(fr.Text)); //徑向力
@@ -96,34 +96,14 @@ namespace Bearing
             double cs_1 = Convert.ToDouble(c_single.Text); //單顆額定動負荷
             int i_1 = Int32.Parse(i_nofb.Text); //軸承個數
             double fv_1 = Convert.ToDouble(fv.Text); //預壓力 
-            
-            //前軸承輸出參數
-            double fa_1; //軸向負荷
-            double c_1;  //額定動負荷
+            //前軸承計算
             double x_1;  //x係數
             double y_1;  //y係數
-            double life_1; //輸出壽命(小時)
-            double life2_1;//輸出額外壽命(小時)
-            double year_1; //壽命轉換年
-            
-            //前軸承計算
-            fa_1 =  F_calculate(fv_1); //軸向負荷計算
-            c_1 =C_calculate(i_1, cs_1); //額定動負荷計算
+            double fa_1 =  F_calculate(Ka,fv_1); //軸向負荷計算
+            C_1 =C_calculate(i_1, cs_1); //額定動負荷計算
             X_Y_calculate(i_1, fa_1, c0_1,b_1, bran_1, a_1, fr_1, out x_1, out y_1); //XY係數計算
             P_1 = P_calculate(x_1,y_1,fr_1,fa_1); //當量軸承負荷計算
-            life_1=Life_calculate(c_1, P_1); //額定壽命計算
-            year_1 = Year_calculate(life_1); //換算年
-
             p.Text = Math.Round(P_1, 2).ToString();//顯示當量動負荷
-            life.Text = Math.Round(life_1, 0).ToString();//顯示壽命小時
-            if (uselife2.IsChecked ==true) //輸出小時
-            {
-                double aiso = Convert.ToDouble(life_p.Text);
-                life2_1 =life_1 * aiso * Ft[Tempture.SelectedIndex] * A1[lost_chance.SelectedIndex];
-                life2.Text = Math.Round(life2_1, 0).ToString();
-                year_1 = Year_calculate(life2_1);
-            }
-            Life_year.Text = Math.Round(year_1, 2).ToString();
             #endregion
 
             #region 後軸承
@@ -136,37 +116,61 @@ namespace Bearing
             double cs_2 = Convert.ToDouble(c_single1.Text); //單顆額定動負荷
             int i_2 = Int32.Parse(i_nofb1.Text); //軸承個數
             double fv_2 = Convert.ToDouble(fv1.Text); //預壓力 
-
-            //後軸承輸出參數
-            double fa_2; //軸向負荷
-            double c_2;  //額定動負荷
+            //後軸承計算
             double x_2;  //x係數
             double y_2;  //y係數
-            double life_2; //輸出壽命(小時)
-            double life2_2;//輸出額外壽命(小時)
-            double year_2; //壽命轉換年
-
-            //後軸承計算
-            fa_2 = F_calculate(fv_2); //軸向負荷計算
-            c_2 = C_calculate(i_2, cs_2); //額定動負荷計算
+            double fa_2 = F_calculate(Ka,fv_2); //軸向負荷計算
+            C_2 = C_calculate(i_2, cs_2); //額定動負荷計算
             X_Y_calculate(i_2, fa_2, c0_2, b_2, bran_2, a_2, fr_2, out x_2, out y_2); //XY係數計算
             P_2 = P_calculate(x_2, y_2, fr_2, fa_2); //當量軸承負荷計算
-            life_2 = Life_calculate(c_2, P_2); //額定壽命計算
-            year_2 = Year_calculate(life_2); //換算年
-
             p1.Text = Math.Round(P_2, 2).ToString();//顯示當量動負荷
-            life1.Text = Math.Round(life_2, 0).ToString();//顯示壽命小時
-            if (uselife2.IsChecked == true) //輸出小時
+            #endregion
+        }
+        private void Calculatelife()
+        {
+            double Rpm = Convert.ToDouble(rpm.Text);//轉速
+
+            //前軸承計算
+            double life_1 = 1000000 / 60 / Rpm * Math.Pow(C_1 / P_1, 3); ; //額定壽命計算
+            double year_1 = Year_calculate(life_1); //換算年
+            if (uselife2.IsChecked == true) 
+            {
+                double aiso = Convert.ToDouble(life_p.Text);
+                double life2_1 = life_1 * aiso * Ft[Tempture.SelectedIndex] * A1[lost_chance.SelectedIndex];
+                life2.Text = Math.Round(life2_1, 0).ToString(); 
+                year_1 = Year_calculate(life2_1);
+            }
+            life.Text = Math.Round(life_1, 0).ToString();//顯示基本額定壽命(小時)
+            Life_year.Text = Math.Round(year_1, 2).ToString(); //輸出年
+            //後軸承計算
+            double life_2 = 1000000 / 60 / Rpm * Math.Pow(C_2 / P_2, 3); ; //額定壽命計算
+            double year_2 = Year_calculate(life_2); //換算年
+            if (uselife2.IsChecked == true) 
             {
                 double aiso = Convert.ToDouble(life_p1.Text);
-                life2_2 = life_2 * aiso * Ft[Tempture.SelectedIndex] * A1[lost_chance.SelectedIndex];
+                double life2_2 = life_2 * aiso * Ft[Tempture.SelectedIndex] * A1[lost_chance.SelectedIndex];
                 life3.Text = Math.Round(life2_2, 0).ToString();
                 year_2 = Year_calculate(life2_2);
             }
-            Life_year1.Text = Math.Round(year_2, 2).ToString();
-            #endregion
+            life1.Text = Math.Round(life_2, 0).ToString();//顯示基本額定壽命(小時)
+            Life_year1.Text = Math.Round(year_2, 2).ToString(); //輸出年
+
+            totallife.Content = "總壽命："+ Math.Round(Totallife_calculate(year_1, year_2),1).ToString() + "年";
+        } //壽命計算
+        private double Totallife_calculate(double y1,double y2)
+        {
+            double p1 = Math.Pow(y1, 1.1);
+            double p2 = Math.Pow(y2, 1.1);
+
+            return 1 / (Math.Pow((1 / p1 + 1 / p2), 1 / 1.1));
         }
 
+        private double Year_calculate(double hour)  //壽命換算時間
+        {
+            double p1 = Convert.ToDouble(Hour_day.Text);
+            double p2 = Convert.ToDouble(Day_year.Text);
+            return hour / p1 / p2;
+        }
         private void X_Y_calculate(int i, double fa, double c0, int b,int bran, int a, double fr, out double x, out double y) //XY係數
         {
             //i 軸承個數
@@ -246,29 +250,14 @@ namespace Bearing
 
             }
         }
-       
         private double C_calculate(double ii, double cs) //額定動負荷計算
         {
             return Math.Pow(ii, 0.7) * cs;
         }
-
-        private double F_calculate(double fv) //軸向負荷計算
-        {
-            if (Ka > 3 * fv)
-            {
-                return Ka;
-            }
-            else
-            {
-                return fv + 0.67 * Ka;
-            }
-        }
-
         private double P_calculate(double x,double y , double fr,double fa) //當量的軸承負荷計算
         {
             return x * fr + y * fa;
         }
-
         private double F_calculate(double ka, double fv) //軸向負荷計算
         {
             if (ka > 3 * fv)
@@ -280,19 +269,12 @@ namespace Bearing
                 return fv + 0.67 * ka;
             }
         }
-        
-        private double Year_calculate( double hour)  //壽命換算時間
-        {
-            double p1 = Convert.ToDouble(Hour_day.Text);
-            double p2 = Convert.ToDouble(Day_year.Text);
-            return hour / p1 / p2;
-        }
         #endregion
 
         #region 額外壽命
         private void Aiso_calculate() //壽命調整係數計算
         {
-            Calculate();
+            CalculateCP();
             //前軸承
             //輸入
             double v1_1 = Convert.ToDouble(v1.Text); //前軸承參考黏度            
@@ -342,14 +324,7 @@ namespace Bearing
             }
             return ec * cu / p;
         }
-
-        private double Life_calculate(double c, double p)//額定壽命計算 輸入額定動負荷C 當量動負荷P 使用全域變數Rpm
-        {
-            return 1000000 / 60 / Rpm * Math.Pow(c / p, 3);
-        }
-
-        //確認是否使用延長壽命
-        private void checkornot(bool b, int s)
+        private void checkornot(bool b, int s)//確認是否使用延長壽命
         {
             lost_chance.IsEnabled = b;
             lost_chance.SelectedIndex = s;
@@ -395,6 +370,7 @@ namespace Bearing
         //計算修正係數按鈕
         private void AisoC_btm_Click(object sender, RoutedEventArgs e)
         {
+           CalculateCP();
            Aiso_calculate();
            Chart.Source = new BitmapImage(new Uri(@"resource/aiso.png", UriKind.Relative));
         }
@@ -402,17 +378,18 @@ namespace Bearing
         //計算按鈕
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            Calculate();
+            P1P2_calculate();
+            CalculateCP();
+            Calculatelife();
+            Rigidity_calculate();
         }
-
         
-        //啟用與停用壽命延長
+        //啟用壽命延長
         private void Uselife2_Checked(object sender, RoutedEventArgs e)
         {
             checkornot(true, 0);
         }
-
-        //如果
+        //停用壽命延長
         private void Uselife2_Unchecked(object sender, RoutedEventArgs e)
         {
             checkornot(false, -1);
@@ -421,12 +398,20 @@ namespace Bearing
         //換接觸角
         private void Angle_DropDownClosed(object sender, EventArgs e)
         {
-            Calculate();
+            CalculateCP();
+        }
+        private void Angle1_DropDownClosed(object sender, EventArgs e)
+        {
+            CalculateCP();
         }
         //換軸承配置
         private void B_con_DropDownClosed(object sender, EventArgs e)
         {
-            Calculate();
+            CalculateCP();
+        }
+        private void B_con1_DropDownClosed(object sender, EventArgs e)
+        {
+            CalculateCP();
         }
         //換軸承型式
         private void Bearing_DropDownClosed(object sender, EventArgs e)
@@ -442,9 +427,8 @@ namespace Bearing
                 angle.SelectedIndex = -1;
             }
 
-            Calculate();
+            CalculateCP();
         }
-        
         private void Bearing1_DropDownClosed(object sender, EventArgs e)
         {
             if (bearing1.SelectedIndex == 0)
@@ -458,7 +442,7 @@ namespace Bearing
                 angle1.SelectedIndex = -1;
             }
 
-            Calculate();
+            CalculateCP();
         }
 
         #region 圖表顯示按鈕
@@ -580,10 +564,32 @@ namespace Bearing
 
         #endregion
 
-        #region 載入與儲存模組
+        #region 剛性計算模組
 
-        //儲存路徑按鈕
-        private void Saveroute_Click(object sender, RoutedEventArgs e)
+        private void Rigidity_calculate()
+        {
+            double d = Convert.ToDouble(dofarbor.Text);
+            double I = Math.PI *  (Math.Pow(d,4)) / 64;
+            double a = Convert.ToDouble(A_length.Text);
+            double L = Convert.ToDouble(B_length.Text);
+            double E = Convert.ToDouble(Eofarbor.Text);
+            double K1 = Convert.ToDouble(kofb.Text)*1000;
+            double K2 = Convert.ToDouble(kofb1.Text)*1000;
+            int p = 1;
+
+            double ys = p * Math.Pow(a, 2) / 3 / E / I * (a + L)*1000;
+            double yz = p*1000 / K1 * ((1 + K1 / K2) * Math.Pow(a, 2) / Math.Pow(L, 2) + 2 * a / L + 1);
+
+
+            TotalR.Content = "總剛性：" + Math.Round(1 / (ys + yz), 2).ToString() + "kg/um";
+        }
+        
+
+        #endregion
+
+        #region 載入與儲存模組
+        #region 按鈕
+        private void Saveroute_Click(object sender, RoutedEventArgs e) //儲存路徑按鈕
         {
             if (Properties.Settings.Default.route =="") //若尚未做選擇
             {
@@ -603,13 +609,7 @@ namespace Bearing
                 Properties.Settings.Default.route = dilog.SelectedPath;  
             }
         }
-        //程式關閉
-        private void Main_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            Properties.Settings.Default.Save();
-        }
-        //主軸儲存按鈕
-        private void Savespindle_btm_Click(object sender, RoutedEventArgs e)
+        private void Savespindle_btm_Click(object sender, RoutedEventArgs e)//主軸儲存按鈕
         {
             if (spindlename.Text == "")
             {
@@ -625,17 +625,24 @@ namespace Bearing
                 {
                     File.Delete(pathString);
                 }
-                saveplan(Plannow);
                 writein(pathString);
             }
         }
-        //儲存方案按鈕
-        private void Saveplan_btm_Click(object sender, RoutedEventArgs e)
+        private void Saveplan_btm_Click(object sender, RoutedEventArgs e) //儲存方案按鈕
         {
-            saveplan(Plannow);
+            if (Plannum == 5)
+            {
+                System.Windows.MessageBox.Show("方案儲存已達上限");
+            }
+            else
+            {
+                saveplan(Plannum);
+                Plannum = Plannum + 1;
+                Plannow = Plannow + 1;
+                Enableplan();
+            }
         }
-        //載入主軸按鈕
-        private void Loadspindle_btm_Click(object sender, RoutedEventArgs e)
+        private void Loadspindle_btm_Click(object sender, RoutedEventArgs e) //載入主軸按鈕
         {
             System.Windows.Forms.OpenFileDialog dialog = new System.Windows.Forms.OpenFileDialog();
             dialog.InitialDirectory = Properties.Settings.Default.route;
@@ -647,14 +654,105 @@ namespace Bearing
                 Properties.Settings.Default.route = System.IO.Path.GetDirectoryName(dialog.FileName); //取得路徑    
                 loadspindle(dialog.FileName); //載入主軸資訊至陣列
 
-                puttext(0);
+                Plannow = 0;
+                puttext();
                 P1P2_calculate();
+                CalculateCP();
+                Calculatelife();
+                Rigidity_calculate();
+                Enableplan();
                 Chart.Source = new BitmapImage(new Uri(@"resource/p1p2.png", UriKind.Relative)); //中央圖片載入
             }
         }
-        
-        //方法 所有陣列寫入ini
-        private void writein(string path)
+        #region 方案部分
+        private void Plan1_btm_Click(object sender, RoutedEventArgs e)
+        {
+            Plannow = 0;
+            puttext();
+            P1P2_calculate();
+            CalculateCP();
+            Calculatelife();
+            Rigidity_calculate();
+        }
+
+        private void Plan2_btm_Click(object sender, RoutedEventArgs e)
+        {
+            Plannow = 1;
+            puttext();
+            P1P2_calculate();
+            CalculateCP();
+            Calculatelife();
+            Rigidity_calculate();
+        }
+
+        private void Plan3_btm_Click(object sender, RoutedEventArgs e)
+        {
+            Plannow = 2;
+            puttext();
+            P1P2_calculate();
+            CalculateCP();
+            Calculatelife();
+            Rigidity_calculate();
+        }
+
+        private void Plan4_btm_Click(object sender, RoutedEventArgs e)
+        {
+            Plannow = 3;
+            puttext();
+            P1P2_calculate();
+            CalculateCP();
+            Calculatelife();
+            Rigidity_calculate();
+        }
+
+        private void Plan5_btm_Click(object sender, RoutedEventArgs e)
+        {
+            Plannow = 4;
+            puttext();
+            P1P2_calculate();
+            CalculateCP();
+            Calculatelife();
+            Rigidity_calculate();
+        }
+
+        private void Del1_btm_Click(object sender, RoutedEventArgs e)
+        {
+            delplan(0);
+            Plannum = Plannum - 1;
+            Disableplan();
+        }
+
+        private void Del2_btm_Click(object sender, RoutedEventArgs e)
+        {
+            delplan(1);
+            Plannum = Plannum - 1;
+            Disableplan();
+        }
+
+        private void Del3_btm_Click(object sender, RoutedEventArgs e)
+        {
+            delplan(2);
+            Plannum = Plannum - 1;
+            Disableplan();
+        }
+
+        private void Del4_btm_Click(object sender, RoutedEventArgs e)
+        {
+            delplan(3);
+            Plannum = Plannum - 1;
+            Disableplan();
+        }
+
+        private void Del5_btm_Click(object sender, RoutedEventArgs e)
+        {
+            delplan(4);
+            Plannum = Plannum - 1;
+            Disableplan();
+        }
+        #endregion
+        #endregion
+        #region 方法
+        private void writein(string path) //方法 所有陣列寫入ini
         {
             FileStream fs = File.Create(path);
             fs.Close();
@@ -663,23 +761,21 @@ namespace Bearing
             sw.WriteLine(Plannum.ToString());
             for (int i = 0; i < 5; i++)
             {
-                for (int j = 0; j < 37; j++)
+                for (int j = 0; j < 39; j++)
                 {
                     sw.WriteLine(Plan[i, j]);
                 }
             }
             sw.Close();
         }
-
-        //方法 載入ini至所有陣列
-        private void loadspindle(string filename)
+        private void loadspindle(string filename) //方法 載入ini至所有陣列
         {
             StreamReader file = new StreamReader(filename);
 
             Plannum = Int32.Parse(file.ReadLine());
             for (int i = 0; i < 5; i++)
             {
-                for (int j = 0; j < 35; j++)
+                for (int j = 0; j < 39; j++)
                 {
                     Plan[i, j] = file.ReadLine();
                 }
@@ -688,30 +784,28 @@ namespace Bearing
         }
         private void load() //宣告新陣列 txt及combo
         {
-            txt = new System.Windows.Controls.TextBox[28]
+            txt = new System.Windows.Controls.TextBox[30]
             { A_length, B_length, C_length, P1_force,P2_force, //負荷計算
-            bname ,c0 ,c_single ,i_nofb ,dm,fv  , //前軸承
-            bname1, c01,c_single1,i_nofb1,dm1,fv1, //後軸承
+            bname ,c0 ,c_single ,i_nofb ,dm,fv , kofb, //前軸承
+            bname1, c01,c_single1,i_nofb1,dm1,fv1,kofb1, //後軸承
             rpm,Hour_day,Day_year,ka,  //加工與負荷
             v40,v100,tb,v1,v3,life_p,life_p1};  //額外壽命   
-
-
+            
             combo = new System.Windows.Controls.ComboBox[9]{
                 bearing,angle,b_con,
                 bearing1,angle1,b_con1,
                 clean,lost_chance,Tempture };
         }
-
         private void saveplan(int order) //方法 將textbox放至想要的陣列目錄
         {
             load();
-            for (int i = 0; i < 28; i++)
+            for (int i = 0; i < 30; i++)
             {
                 Plan[order, i] = txt[i].Text;
             }
             for (int i = 0; i < 9; i++)
             {
-                Plan[order, 28 + i] = combo[i].SelectedIndex.ToString();
+                Plan[order, 30 + i] = combo[i].SelectedIndex.ToString();
             }
             #region //無效程式碼
             //Plan[order, 0] = A_length.Text;
@@ -758,16 +852,16 @@ namespace Bearing
             //Plan[order, 34] = life_p1.Text;
             #endregion 
         }
-        private void puttext(int order) //方法 將陣列目錄放入textbox
+        private void puttext() //方法 將陣列目錄放入textbox
         {
             load();
-            for (int i = 0; i < 28; i++)
+            for (int i = 0; i < 30; i++)
             {
-                txt[i].Text = Plan[order, i];
+                txt[i].Text = Plan[Plannow, i];
             }
             for (int i = 0; i < 9; i++)
             {
-                combo[i].SelectedIndex = Int32.Parse(Plan[order, 28 + i]);
+                combo[i].SelectedIndex = Int32.Parse(Plan[Plannow, 30 + i]);
             }
             #region 無效程式碼
             //A_length.Text = Plan[order, 0];
@@ -814,68 +908,42 @@ namespace Bearing
             //life_p1.Text = Plan[order, 34];
             #endregion
         }
-        
-       
-        
+        private void Enableplan() //開啟方案按鈕 
+        {
+            System.Windows.Controls.Button[] planbtm = new System.Windows.Controls.Button[5] { plan1_btm, plan2_btm, plan3_btm, plan4_btm, plan5_btm };
+            System.Windows.Controls.Button[] delbtm = new System.Windows.Controls.Button[5] { del1_btm, del2_btm, del3_btm, del4_btm, del5_btm };
+            for (int i = 0; i < Plannum; i++)
+            {
+                planbtm[i].IsEnabled = true;
+                delbtm[i].IsEnabled = true;
+            }
+        }
+        private void Disableplan() //關閉方案按鈕 
+        {
+            System.Windows.Controls.Button[] planbtm = new System.Windows.Controls.Button[5] { plan1_btm, plan2_btm, plan3_btm, plan4_btm, plan5_btm };
+            System.Windows.Controls.Button[] delbtm = new System.Windows.Controls.Button[5] { del1_btm, del2_btm, del3_btm, del4_btm, del5_btm };
+
+            for (int i = Plannum; i < 5; i++)
+            {
+                planbtm[i].IsEnabled = false;
+                delbtm[i].IsEnabled = false;
+            }
+        }
+        private void delplan(int order) //刪除方案
+        {
+            for (int i = order; i < 4; i++)
+            {
+                for (int j = 0; j < 39; j++)
+                {
+                    Plan[i, j] = Plan[i+1, j];
+                    Plan[i+1, j] = "";
+                }
+            }
+        }
 
         #endregion
 
-        #region 方案模組
-        #region 按鈕
-            private void Plan1_btm_Click(object sender, RoutedEventArgs e)
-        {
 
-        }
-
-        private void Plan2_btm_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void Plan3_btm_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void Plan4_btm_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void Plan5_btm_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void Del1_btm_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void Del2_btm_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void Del3_btm_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void Del4_btm_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void Del5_btm_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-        #endregion
-        #region 方法
-
-
-        #endregion
         #endregion
     }
 }
