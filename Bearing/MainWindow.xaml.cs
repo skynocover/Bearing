@@ -30,12 +30,15 @@ namespace Bearing
 
         #region 宣告
         public string Route; //儲存路徑
-        public string[,] Plan = new string[5, 39]; //放置方案陣列 
+        public string[,] Plan = new string[5, 41]; //放置方案陣列 
+        public string[] Bearing = new string[9];  //放置軸承陣列
         public int Plannum = 0; //當前共幾個方案
         public int Plannow = 0; //現在顯示的是第幾個方案
-        public System.Windows.Controls.TextBox[] txt = new System.Windows.Controls.TextBox[28]; //text陣列
+        public System.Windows.Controls.TextBox[] txt = new System.Windows.Controls.TextBox[32]; //text陣列
         public System.Windows.Controls.ComboBox[] combo = new System.Windows.Controls.ComboBox[9]; //combo陣列
-        
+        public System.Windows.Controls.TextBox[] btxt = new System.Windows.Controls.TextBox[5]; //軸承text
+        public System.Windows.Controls.ComboBox[] bcombo = new System.Windows.Controls.ComboBox[3]; //軸承combo
+
         //前軸承輸出
         public double P_1;//徑向當量動負荷
         public double C_1;//額定動負荷
@@ -761,9 +764,9 @@ namespace Bearing
             sw.WriteLine(Plannum.ToString());
             for (int i = 0; i < 5; i++)
             {
-                for (int j = 0; j < 39; j++)
+                for (int j = 0; j < 41; j++)
                 {
-                    sw.WriteLine(Plan[i, j]);
+                    sw.WriteLine(Plan[i,j]);
                 }
             }
             sw.Close();
@@ -775,7 +778,7 @@ namespace Bearing
             Plannum = Int32.Parse(file.ReadLine());
             for (int i = 0; i < 5; i++)
             {
-                for (int j = 0; j < 39; j++)
+                for (int j = 0; j < 41; j++)
                 {
                     Plan[i, j] = file.ReadLine();
                 }
@@ -784,8 +787,8 @@ namespace Bearing
         }
         private void load() //宣告新陣列 txt及combo
         {
-            txt = new System.Windows.Controls.TextBox[30]
-            { A_length, B_length, C_length, P1_force,P2_force, //負荷計算
+            txt = new System.Windows.Controls.TextBox[32]
+            { A_length, B_length, C_length, P1_force,P2_force,dofarbor,Eofarbor, //負荷計算
             bname ,c0 ,c_single ,i_nofb ,dm,fv , kofb, //前軸承
             bname1, c01,c_single1,i_nofb1,dm1,fv1,kofb1, //後軸承
             rpm,Hour_day,Day_year,ka,  //加工與負荷
@@ -799,13 +802,13 @@ namespace Bearing
         private void saveplan(int order) //方法 將textbox放至想要的陣列目錄
         {
             load();
-            for (int i = 0; i < 30; i++)
+            for (int i = 0; i < 32; i++)
             {
                 Plan[order, i] = txt[i].Text;
             }
             for (int i = 0; i < 9; i++)
             {
-                Plan[order, 30 + i] = combo[i].SelectedIndex.ToString();
+                Plan[order, 32 + i] = combo[i].SelectedIndex.ToString();
             }
             #region //無效程式碼
             //Plan[order, 0] = A_length.Text;
@@ -855,13 +858,13 @@ namespace Bearing
         private void puttext() //方法 將陣列目錄放入textbox
         {
             load();
-            for (int i = 0; i < 30; i++)
+            for (int i = 0; i < 32; i++)
             {
                 txt[i].Text = Plan[Plannow, i];
             }
             for (int i = 0; i < 9; i++)
             {
-                combo[i].SelectedIndex = Int32.Parse(Plan[Plannow, 30 + i]);
+                combo[i].SelectedIndex = Int32.Parse(Plan[Plannow, 32 + i]);
             }
             #region 無效程式碼
             //A_length.Text = Plan[order, 0];
@@ -933,7 +936,7 @@ namespace Bearing
         {
             for (int i = order; i < 4; i++)
             {
-                for (int j = 0; j < 39; j++)
+                for (int j = 0; j < 41; j++)
                 {
                     Plan[i, j] = Plan[i+1, j];
                     Plan[i+1, j] = "";
@@ -943,7 +946,159 @@ namespace Bearing
 
         #endregion
 
+        #endregion
+        #region 選擇軸承模組
+        #region 按鈕
+        private void Loadbearing_btm_Click(object sender, RoutedEventArgs e)//載入軸承一
+        {
+            System.Windows.Forms.OpenFileDialog dialog = new System.Windows.Forms.OpenFileDialog();
+            dialog.InitialDirectory = Properties.Settings.Default.route;
+            dialog.ShowDialog(); //使用預設目錄開啟視窗
+
+            if (dialog.FileName != "")
+            {
+                Buildbini();
+                bname.Text = System.IO.Path.GetFileNameWithoutExtension(dialog.FileName); //檔名帶入textbox
+                Loadbearing(dialog.FileName); //載入主軸資訊至陣列
+                putBtext();
+            }
+        }
+
+        private void Savebearing_btm_Click(object sender, RoutedEventArgs e) //儲存軸承1按鈕
+        {
+            if (bname.Text == "")
+            {
+                System.Windows.Forms.MessageBox.Show("請輸入軸承名稱");
+            }
+            else
+            {
+                if (Properties.Settings.Default.route == "") //若尚未做選擇
+                {
+                    Properties.Settings.Default.route = System.Environment.CurrentDirectory; //預設目錄使用檔案目前目錄
+                }
+
+                FolderBrowserDialog dilog = new FolderBrowserDialog();
+                dilog.SelectedPath = Properties.Settings.Default.route; //使用預設目錄
+                dilog.ShowDialog();
+                string filename = bname.Text + ".txt";
+                string pathString = System.IO.Path.Combine(dilog.SelectedPath, filename);
+
+                if (File.Exists(pathString))
+                {
+                    File.Delete(pathString);
+                }
+                Buildbini();
+                takeBtext();
+                savebearing(pathString);
+            }
+        }
+
+        private void Loadbearing1_btm_Click(object sender, RoutedEventArgs e)//載入軸承二
+        {
+            System.Windows.Forms.OpenFileDialog dialog = new System.Windows.Forms.OpenFileDialog();
+            dialog.InitialDirectory = Properties.Settings.Default.route;
+            dialog.ShowDialog(); //使用預設目錄開啟視窗
+
+            if (dialog.FileName != "")
+            {
+                Buildbini1();
+                bname1.Text = System.IO.Path.GetFileNameWithoutExtension(dialog.FileName); //檔名帶入textbox    
+                Loadbearing(dialog.FileName); //載入主軸資訊至陣列
+                putBtext();
+            }
+        }
+
+        private void Savebearing1_btm_Click(object sender, RoutedEventArgs e)//儲存軸承2按鈕
+        {
+            if (bname.Text == "")
+            {
+                System.Windows.Forms.MessageBox.Show("請輸入軸承名稱");
+            }
+            else
+            {
+                if (Properties.Settings.Default.route == "") //若尚未做選擇
+                {
+                    Properties.Settings.Default.route = System.Environment.CurrentDirectory; //預設目錄使用檔案目前目錄
+                }
+
+                FolderBrowserDialog dilog = new FolderBrowserDialog();
+                dilog.SelectedPath = Properties.Settings.Default.route; //使用預設目錄
+                dilog.ShowDialog();
+                string filename = bname1.Text + ".txt";
+                string pathString = System.IO.Path.Combine(dilog.SelectedPath, filename);
+
+                if (File.Exists(pathString))
+                {
+                    File.Delete(pathString);
+                }
+                Buildbini1();
+                takeBtext();
+                savebearing(pathString);
+            }
+        }
+        #endregion
+        #region 方法
+        private void Loadbearing(string filename) //載入軸承
+        {
+            StreamReader file = new StreamReader(filename);
+            for (int i = 0; i < 8; i++)
+            {
+                Bearing[i] = file.ReadLine();
+            }
+            file.Close();
+        }
+        private void savebearing(string path) //儲存軸承
+        {
+            FileStream fs = File.Create(path);
+            fs.Close();
+
+            StreamWriter sw = new StreamWriter(path);
+            for (int i = 0; i < 8; i++)
+            {
+                sw.WriteLine(Bearing[i]);
+            }
+            sw.Close();
+        }
+        private void putBtext() //將陣列內容放入格子
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                btxt[i].Text = Bearing[i];
+            }
+            for (int j = 0; j < 3; j++)
+            {
+                bcombo[j].SelectedIndex = Int32.Parse(Bearing[j + 5]);
+            }
+        }
+        private void takeBtext() //將格子內容放入陣列
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                Bearing[i] = btxt[i].Text;
+            }
+            for (int j = 0; j < 3; j++)
+            {
+                Bearing[j + 5]  = bcombo[j].SelectedIndex.ToString();
+            }
+        }
+        private void Buildbini() //宣告軸承一
+        {
+            btxt = new System.Windows.Controls.TextBox[5]
+            { c0,c_single,dm,fv,kofb};
+            bcombo = new System.Windows.Controls.ComboBox[3]
+            {bearing,angle,b_con};
+        }
+        private void Buildbini1() //宣告軸承二
+        {
+            btxt = new System.Windows.Controls.TextBox[5]
+            { c01,c_single1,dm1,fv1,kofb1};
+            bcombo = new System.Windows.Controls.ComboBox[3]
+            {bearing1,angle1,b_con1};
+        }
+        #endregion
 
         #endregion
+
+        
     }
 }
