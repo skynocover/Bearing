@@ -30,14 +30,14 @@ namespace Bearing
 
         #region 宣告
         public string Route; //儲存路徑
-        public string[,] Plan = new string[5, 41]; //放置方案陣列 
-        public string[] Bearing = new string[9];  //放置軸承陣列
+        public string[,] Plan = new string[5, 39]; //放置方案陣列 
+        public string[] Bearing = new string[7];  //放置軸承陣列
         public int Plannum = 0; //當前共幾個方案
         public int Plannow = 0; //現在顯示的是第幾個方案
-        public System.Windows.Controls.TextBox[] txt = new System.Windows.Controls.TextBox[32]; //text陣列
+        public System.Windows.Controls.TextBox[] txt = new System.Windows.Controls.TextBox[30]; //text陣列
         public System.Windows.Controls.ComboBox[] combo = new System.Windows.Controls.ComboBox[9]; //combo陣列
         public System.Windows.Controls.TextBox[] btxt = new System.Windows.Controls.TextBox[5]; //軸承text
-        public System.Windows.Controls.ComboBox[] bcombo = new System.Windows.Controls.ComboBox[3]; //軸承combo
+        public System.Windows.Controls.ComboBox[] bcombo = new System.Windows.Controls.ComboBox[2]; //軸承combo
 
         //前軸承輸出
         public double P_1;//徑向當量動負荷
@@ -97,8 +97,8 @@ namespace Bearing
             int a_1 = angle.SelectedIndex; //接觸角類型
             double c0_1 = Convert.ToDouble(c0.Text);//額定靜負荷
             double cs_1 = Convert.ToDouble(c_single.Text); //單顆額定動負荷
-            int i_1 = Int32.Parse(i_nofb.Text); //軸承個數
-            double fv_1 = Convert.ToDouble(fv.Text); //預壓力 
+            int i_1 = Getnum(b_con.SelectedIndex); //軸承個數
+            double fv_1 = CalculateFv(Convert.ToDouble(fv.Text), bran_1); //預壓力 
             //前軸承計算
             double x_1;  //x係數
             double y_1;  //y係數
@@ -107,6 +107,8 @@ namespace Bearing
             X_Y_calculate(i_1, fa_1, c0_1,b_1, bran_1, a_1, fr_1, out x_1, out y_1); //XY係數計算
             P_1 = P_calculate(x_1,y_1,fr_1,fa_1); //當量軸承負荷計算
             p.Text = Math.Round(P_1, 2).ToString();//顯示當量動負荷
+            x_box1.Text = x_1.ToString();
+            y_box1.Text = y_1.ToString();
             #endregion
 
             #region 後軸承
@@ -117,8 +119,8 @@ namespace Bearing
             int a_2 = angle1.SelectedIndex; //接觸角類型
             double c0_2 = Convert.ToDouble(c01.Text);//額定靜負荷
             double cs_2 = Convert.ToDouble(c_single1.Text); //單顆額定動負荷
-            int i_2 = Int32.Parse(i_nofb1.Text); //軸承個數
-            double fv_2 = Convert.ToDouble(fv1.Text); //預壓力 
+            int i_2 = Getnum(b_con1.SelectedIndex); //軸承個數
+            double fv_2 = CalculateFv(Convert.ToDouble(fv1.Text), bran_2); //預壓力 
             //後軸承計算
             double x_2;  //x係數
             double y_2;  //y係數
@@ -127,7 +129,35 @@ namespace Bearing
             X_Y_calculate(i_2, fa_2, c0_2, b_2, bran_2, a_2, fr_2, out x_2, out y_2); //XY係數計算
             P_2 = P_calculate(x_2, y_2, fr_2, fa_2); //當量軸承負荷計算
             p1.Text = Math.Round(P_2, 2).ToString();//顯示當量動負荷
+            x_box2.Text = x_2.ToString();
+            y_box2.Text = y_2.ToString();
             #endregion
+        }
+        private double CalculateFv(double fv,int arrange) //取得正確的預壓力
+        {
+            switch (arrange)
+            {
+                case 2:
+                    return fv * 1.35;
+                case 3:
+                    return fv * 2;
+                default:
+                    return fv;
+            }
+        }
+        private int Getnum(int index) //取得軸承數
+        {
+            switch (index)
+            {
+                case 0:
+                    return 2;
+                case 1:
+                    return 2;
+                case 2:
+                    return 3;
+                default:
+                    return 4;
+            }
         }
         private void Calculatelife()
         {
@@ -177,12 +207,16 @@ namespace Bearing
         private void X_Y_calculate(int i, double fa, double c0, int b,int bran, int a, double fr, out double x, out double y) //XY係數
         {
             //i 軸承個數
-            //fa //軸向負荷
+            //fa 軸向負荷
             //c0 額定靜負荷
             //b 軸承類型
             //bran 軸承配置
             //a 接觸角類型
             //fr 徑向力
+            if (bran >1)
+            {
+                bran = 1;
+            }
 
             double parameter = i * fa / c0; //相對軸向負荷
 
@@ -222,7 +256,12 @@ namespace Bearing
                     //抓出ee值
                     double ee = Aee[kk];
 
+
                     int p1 = b_con.SelectedIndex;//軸承配置
+                    if (p1 > 1)
+                    {
+                        p1 = 1;
+                    }
                     int p2;
                     if (fa / fr <= ee) { p2 = 0; } else { p2 = 1; }//大小
                     x = A_15X[p1, p2];
@@ -246,6 +285,10 @@ namespace Bearing
                 double ee = DGee[kk];
 
                 int p1 = b_con.SelectedIndex;//軸承配置
+                if (p1 > 1)
+                {
+                    p1 = 1;
+                }
                 int p2;
                 if (fa / fr <= ee) { p2 = 0; } else { p2 = 1; }//大小
                 x= DGX[p1, p2];
@@ -330,39 +373,39 @@ namespace Bearing
         private void checkornot(bool b, int s)//確認是否使用延長壽命
         {
             lost_chance.IsEnabled = b;
-            lost_chance.SelectedIndex = s;
+            //lost_chance.SelectedIndex = s;
             Tempture.IsEnabled = b;
-            Tempture.SelectedIndex = s;
+            //Tempture.SelectedIndex = s;
             clean.IsEnabled = b;
-            clean.SelectedIndex = s;
+           // clean.SelectedIndex = s;
             life_p.IsEnabled = b;
-            life_p.Text = "1"; //注意這是什麼
+            //life_p.Text = "1"; //注意這是什麼
             life2.IsEnabled = b;
             life2.Text = "";
             life3.IsEnabled = b;
-            life3.Text = "";
+           life3.Text = "";
             v40.IsEnabled = b;
-            v40.Text = "25";
+           // v40.Text = "25";
             v100.IsEnabled = b;
-            v100.Text = "5";
+           // v100.Text = "5";
             tb.IsEnabled = b;
-            tb.Text = "60";
+           // tb.Text = "60";
             v1.IsEnabled = b;
-            v1.Text = "10";
+           // v1.Text = "10";
             v3.IsEnabled = b;
-            v3.Text = "10";
+           // v3.Text = "10";
             k.IsEnabled = b;
-            k.Text = "";
+           // k.Text = "";
             eccup.IsEnabled = b;
-            eccup.Text = "";
+           // eccup.Text = "";
             life_p.IsEnabled = b;
-            life_p.Text = "1";
+           // life_p.Text = "1";
             k1.IsEnabled = b;
-            k1.Text = "";
+           // k1.Text = "";
             eccup1.IsEnabled = b;
-            eccup1.Text = "";
+           // eccup1.Text = "";
             life_p1.IsEnabled = b;
-            life_p1.Text = "1";
+           // life_p1.Text = "1";
             aisoC_btm.IsEnabled = b;
 
         }
@@ -576,15 +619,55 @@ namespace Bearing
             double a = Convert.ToDouble(A_length.Text);
             double L = Convert.ToDouble(B_length.Text);
             double E = Convert.ToDouble(Eofarbor.Text);
-            double K1 = Convert.ToDouble(kofb.Text)*1000;
-            double K2 = Convert.ToDouble(kofb1.Text)*1000;
+
+            int Angle1 = angle.SelectedIndex;
+            int Angle2 = angle1.SelectedIndex;
+            int Arrange1 = b_con.SelectedIndex;
+            int Arrange2 = b_con1.SelectedIndex;
+
+            double K1 = 1000/9.81*calculate_BR(Angle1,Arrange1 , Convert.ToDouble(kofb.Text));
+            double K2 = 1000/9.81*calculate_BR(Angle2,Arrange2, Convert.ToDouble(kofb1.Text));
             int p = 1;
 
             double ys = p * Math.Pow(a, 2) / 3 / E / I * (a + L)*1000;
             double yz = p*1000 / K1 * ((1 + K1 / K2) * Math.Pow(a, 2) / Math.Pow(L, 2) + 2 * a / L + 1);
-
-
             TotalR.Content = "總剛性：" + Math.Round(1 / (ys + yz), 2).ToString() + "kg/um";
+        }
+        private double calculate_BR(int angle , int arrange , double rigidity)//軸承剛性計算
+        {
+            double p1;
+            double p2;
+            switch (angle)
+            {
+                case -1:
+                    p1 = 1;
+                    break;
+                case 0:
+                    p1 = 6;
+                    break;
+                case 1:
+                    p1 = 4;
+                    break;
+                default:
+                    p1 = 6;
+                    break;
+            }
+            switch (arrange)
+            {
+                case 0:
+                    p2 = 1;
+                    break;
+                case 1:
+                    p2 = 1;
+                    break;
+                case 2:
+                    p2 = 1.45;
+                    break;
+                default:
+                    p2 = 2;
+                    break;
+            }
+            return rigidity * p1 * p2;
         }
         
 
@@ -594,23 +677,7 @@ namespace Bearing
         #region 按鈕
         private void Saveroute_Click(object sender, RoutedEventArgs e) //儲存路徑按鈕
         {
-            if (Properties.Settings.Default.route =="") //若尚未做選擇
-            {
-                Properties.Settings.Default.route = System.Environment.CurrentDirectory; //預設目錄使用檔案目前目錄
-            }
-
-            FolderBrowserDialog dilog = new FolderBrowserDialog(); 
-            dilog.SelectedPath = Properties.Settings.Default.route; //使用預設目錄
-            dilog.ShowDialog();
-
-            if (dilog.SelectedPath=="")
-            {
-                Properties.Settings.Default.route = System.Environment.CurrentDirectory;
-            }
-            else
-            {
-                Properties.Settings.Default.route = dilog.SelectedPath;  
-            }
+            Properties.Settings.Default.route = loadroute(Properties.Settings.Default.route);
         }
         private void Savespindle_btm_Click(object sender, RoutedEventArgs e)//主軸儲存按鈕
         {
@@ -667,6 +734,7 @@ namespace Bearing
                 Chart.Source = new BitmapImage(new Uri(@"resource/p1p2.png", UriKind.Relative)); //中央圖片載入
             }
         }
+        
         #region 方案部分
         private void Plan1_btm_Click(object sender, RoutedEventArgs e)
         {
@@ -755,6 +823,26 @@ namespace Bearing
         #endregion
         #endregion
         #region 方法
+        private string loadroute(string route) //輸入setting路徑,空白則使用當前目錄,打開路徑,回傳當前目錄或已選擇目錄
+        {
+            if (route == "") //若尚未做選擇
+            {
+                route = System.Environment.CurrentDirectory; //預設目錄使用檔案目前目錄
+            }
+
+            FolderBrowserDialog dilog = new FolderBrowserDialog();
+            dilog.SelectedPath = route; //使用預設目錄
+            dilog.ShowDialog();
+
+            if (dilog.SelectedPath == "")
+            {
+                return System.Environment.CurrentDirectory;
+            }
+            else
+            {
+                return dilog.SelectedPath;
+            }
+        }
         private void writein(string path) //方法 所有陣列寫入ini
         {
             FileStream fs = File.Create(path);
@@ -764,7 +852,7 @@ namespace Bearing
             sw.WriteLine(Plannum.ToString());
             for (int i = 0; i < 5; i++)
             {
-                for (int j = 0; j < 41; j++)
+                for (int j = 0; j < 39; j++)
                 {
                     sw.WriteLine(Plan[i,j]);
                 }
@@ -778,7 +866,7 @@ namespace Bearing
             Plannum = Int32.Parse(file.ReadLine());
             for (int i = 0; i < 5; i++)
             {
-                for (int j = 0; j < 41; j++)
+                for (int j = 0; j < 39; j++)
                 {
                     Plan[i, j] = file.ReadLine();
                 }
@@ -787,10 +875,10 @@ namespace Bearing
         }
         private void load() //宣告新陣列 txt及combo
         {
-            txt = new System.Windows.Controls.TextBox[32]
+            txt = new System.Windows.Controls.TextBox[30]
             { A_length, B_length, C_length, P1_force,P2_force,dofarbor,Eofarbor, //負荷計算
-            bname ,c0 ,c_single ,i_nofb ,dm,fv , kofb, //前軸承
-            bname1, c01,c_single1,i_nofb1,dm1,fv1,kofb1, //後軸承
+            bname ,c0 ,c_single  ,dm,fv , kofb, //前軸承
+            bname1, c01,c_single1,dm1,fv1,kofb1, //後軸承
             rpm,Hour_day,Day_year,ka,  //加工與負荷
             v40,v100,tb,v1,v3,life_p,life_p1};  //額外壽命   
             
@@ -802,114 +890,26 @@ namespace Bearing
         private void saveplan(int order) //方法 將textbox放至想要的陣列目錄
         {
             load();
-            for (int i = 0; i < 32; i++)
+            for (int i = 0; i < 30; i++)
             {
                 Plan[order, i] = txt[i].Text;
             }
             for (int i = 0; i < 9; i++)
             {
-                Plan[order, 32 + i] = combo[i].SelectedIndex.ToString();
+                Plan[order, 30 + i] = combo[i].SelectedIndex.ToString();
             }
-            #region //無效程式碼
-            //Plan[order, 0] = A_length.Text;
-            //Plan[order, 1] = B_length.Text;
-            //Plan[order, 2] = C_length.Text;
-            //Plan[order, 3] = P1_force.Text;
-            //Plan[order, 4] = P2_force.Text;
-
-            ////前軸承
-            //Plan[order, 5] = bearing.SelectedIndex.ToString();
-            //Plan[order, 6] = angle.SelectedIndex.ToString();
-            //Plan[order, 7] = b_con.SelectedIndex.ToString();
-            //Plan[order, 8] = c0.Text;
-            //Plan[order, 9] = c_single.Text;
-            //Plan[order, 10] = i_nofb.Text;
-            //Plan[order, 11] = dm.Text;
-            //Plan[order, 12] = fv.Text;
-            ////後軸承
-            //Plan[order, 13] = bearing1.SelectedIndex.ToString();
-            //Plan[order, 14] = angle1.SelectedIndex.ToString();
-            //Plan[order, 15] = b_con1.SelectedIndex.ToString();
-            //Plan[order, 16] = c01.Text;
-            //Plan[order, 17] = c_single1.Text;
-            //Plan[order, 18] = i_nofb1.Text;
-            //Plan[order, 19] = dm1.Text;
-            //Plan[order, 20] = fv1.Text;
-
-            ////加工與負荷
-            //Plan[order, 21] = rpm.Text;
-            //Plan[order, 22] = Hour_day.Text;
-            //Plan[order, 23] = Day_year.Text;
-            //Plan[order, 24] = ka.Text;
-
-            ////額外壽命
-            //Plan[order, 25] = clean.SelectedIndex.ToString();
-            //Plan[order, 26] = v40.Text;
-            //Plan[order, 27] = v100.Text;
-            //Plan[order, 28] = tb.Text;
-            //Plan[order, 29] = v1.Text;
-            //Plan[order, 30] = v3.Text;
-            //Plan[order, 31] = lost_chance.SelectedIndex.ToString();
-            //Plan[order, 32] = Tempture.SelectedIndex.ToString();
-            //Plan[order, 33] = life_p.Text;
-            //Plan[order, 34] = life_p1.Text;
-            #endregion 
         }
         private void puttext() //方法 將陣列目錄放入textbox
         {
             load();
-            for (int i = 0; i < 32; i++)
+            for (int i = 0; i < 30; i++)
             {
                 txt[i].Text = Plan[Plannow, i];
             }
             for (int i = 0; i < 9; i++)
             {
-                combo[i].SelectedIndex = Int32.Parse(Plan[Plannow, 32 + i]);
+                combo[i].SelectedIndex = Int32.Parse(Plan[Plannow, 30 + i]);
             }
-            #region 無效程式碼
-            //A_length.Text = Plan[order, 0];
-            //B_length.Text = Plan[order, 1];
-            //C_length.Text = Plan[order, 2];
-            //P1_force.Text = Plan[order, 3];
-            //P2_force.Text = Plan[order, 4];
-
-            ////前軸承
-            //bearing.SelectedIndex = Int32.Parse(Plan[order, 5]);
-            //angle.SelectedIndex = Int32.Parse(Plan[order, 6]);
-            //b_con.SelectedIndex = Int32.Parse(Plan[order, 7]);
-            //c0.Text = Plan[order, 8];
-            //c_single.Text = Plan[order, 9];
-            //i_nofb.Text = Plan[order, 10];
-            //dm.Text = Plan[order, 11];
-            //fv.Text = Plan[order, 12];
-            ////後軸承
-            //bearing1.SelectedIndex = Int32.Parse(Plan[order, 13]);
-            //angle1.SelectedIndex = Int32.Parse(Plan[order, 14]);
-            //b_con1.SelectedIndex = Int32.Parse(Plan[order, 15]);
-            //c01.Text = Plan[order, 16];
-            //c_single1.Text = Plan[order, 17];
-            //i_nofb1.Text = Plan[order, 18];
-            //dm1.Text = Plan[order, 19];
-            //fv1.Text = Plan[order, 20];
-
-            ////加工與負荷
-            //rpm.Text = Plan[order, 21];
-            //Hour_day.Text = Plan[order, 22];
-            //Day_year.Text = Plan[order, 23];
-            //ka.Text = Plan[order, 24];
-
-            ////額外壽命
-            //clean.SelectedIndex = Int32.Parse(Plan[order, 25]);
-            //v40.Text = Plan[order, 26];
-            //v100.Text = Plan[order, 27];
-            //tb.Text = Plan[order, 28];
-            //v1.Text = Plan[order, 29];
-            //v3.Text = Plan[order, 30];
-            //lost_chance.SelectedIndex = Int32.Parse(Plan[order, 31]);
-            //Tempture.SelectedIndex = Int32.Parse(Plan[order, 32]);
-            //life_p.Text = Plan[order, 33];
-            //life_p1.Text = Plan[order, 34];
-            #endregion
         }
         private void Enableplan() //開啟方案按鈕 
         {
@@ -936,7 +936,7 @@ namespace Bearing
         {
             for (int i = order; i < 4; i++)
             {
-                for (int j = 0; j < 41; j++)
+                for (int j = 0; j < 39; j++)
                 {
                     Plan[i, j] = Plan[i+1, j];
                     Plan[i+1, j] = "";
@@ -952,7 +952,7 @@ namespace Bearing
         private void Loadbearing_btm_Click(object sender, RoutedEventArgs e)//載入軸承一
         {
             System.Windows.Forms.OpenFileDialog dialog = new System.Windows.Forms.OpenFileDialog();
-            dialog.InitialDirectory = Properties.Settings.Default.route;
+            dialog.InitialDirectory = Properties.Settings.Default.broute;
             dialog.ShowDialog(); //使用預設目錄開啟視窗
 
             if (dialog.FileName != "")
@@ -963,40 +963,10 @@ namespace Bearing
                 putBtext();
             }
         }
-
-        private void Savebearing_btm_Click(object sender, RoutedEventArgs e) //儲存軸承1按鈕
-        {
-            if (bname.Text == "")
-            {
-                System.Windows.Forms.MessageBox.Show("請輸入軸承名稱");
-            }
-            else
-            {
-                if (Properties.Settings.Default.route == "") //若尚未做選擇
-                {
-                    Properties.Settings.Default.route = System.Environment.CurrentDirectory; //預設目錄使用檔案目前目錄
-                }
-
-                FolderBrowserDialog dilog = new FolderBrowserDialog();
-                dilog.SelectedPath = Properties.Settings.Default.route; //使用預設目錄
-                dilog.ShowDialog();
-                string filename = bname.Text + ".txt";
-                string pathString = System.IO.Path.Combine(dilog.SelectedPath, filename);
-
-                if (File.Exists(pathString))
-                {
-                    File.Delete(pathString);
-                }
-                Buildbini();
-                takeBtext();
-                savebearing(pathString);
-            }
-        }
-
         private void Loadbearing1_btm_Click(object sender, RoutedEventArgs e)//載入軸承二
         {
             System.Windows.Forms.OpenFileDialog dialog = new System.Windows.Forms.OpenFileDialog();
-            dialog.InitialDirectory = Properties.Settings.Default.route;
+            dialog.InitialDirectory = Properties.Settings.Default.broute;
             dialog.ShowDialog(); //使用預設目錄開啟視窗
 
             if (dialog.FileName != "")
@@ -1007,7 +977,28 @@ namespace Bearing
                 putBtext();
             }
         }
+        private void Savebearing_btm_Click(object sender, RoutedEventArgs e) //儲存軸承1按鈕
+        {
+            if (bname.Text == "")
+            {
+                System.Windows.Forms.MessageBox.Show("請輸入軸承名稱");
+            }
+            else
+            {
+                Properties.Settings.Default.broute = loadroute(Properties.Settings.Default.broute);
 
+                string filename = bname.Text + ".txt";
+                string pathString = System.IO.Path.Combine(Properties.Settings.Default.broute, filename);
+
+                if (File.Exists(pathString))
+                {
+                    File.Delete(pathString);
+                }
+                Buildbini();
+                takeBtext();
+                savebearing(pathString);
+            }
+        }
         private void Savebearing1_btm_Click(object sender, RoutedEventArgs e)//儲存軸承2按鈕
         {
             if (bname.Text == "")
@@ -1016,16 +1007,9 @@ namespace Bearing
             }
             else
             {
-                if (Properties.Settings.Default.route == "") //若尚未做選擇
-                {
-                    Properties.Settings.Default.route = System.Environment.CurrentDirectory; //預設目錄使用檔案目前目錄
-                }
-
-                FolderBrowserDialog dilog = new FolderBrowserDialog();
-                dilog.SelectedPath = Properties.Settings.Default.route; //使用預設目錄
-                dilog.ShowDialog();
+                Properties.Settings.Default.broute = loadroute(Properties.Settings.Default.broute);
                 string filename = bname1.Text + ".txt";
-                string pathString = System.IO.Path.Combine(dilog.SelectedPath, filename);
+                string pathString = System.IO.Path.Combine(Properties.Settings.Default.broute, filename);
 
                 if (File.Exists(pathString))
                 {
@@ -1041,7 +1025,7 @@ namespace Bearing
         private void Loadbearing(string filename) //載入軸承
         {
             StreamReader file = new StreamReader(filename);
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 7; i++)
             {
                 Bearing[i] = file.ReadLine();
             }
@@ -1053,7 +1037,7 @@ namespace Bearing
             fs.Close();
 
             StreamWriter sw = new StreamWriter(path);
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 7; i++)
             {
                 sw.WriteLine(Bearing[i]);
             }
@@ -1065,7 +1049,7 @@ namespace Bearing
             {
                 btxt[i].Text = Bearing[i];
             }
-            for (int j = 0; j < 3; j++)
+            for (int j = 0; j < 2; j++)
             {
                 bcombo[j].SelectedIndex = Int32.Parse(Bearing[j + 5]);
             }
@@ -1076,7 +1060,7 @@ namespace Bearing
             {
                 Bearing[i] = btxt[i].Text;
             }
-            for (int j = 0; j < 3; j++)
+            for (int j = 0; j < 2; j++)
             {
                 Bearing[j + 5]  = bcombo[j].SelectedIndex.ToString();
             }
@@ -1085,20 +1069,22 @@ namespace Bearing
         {
             btxt = new System.Windows.Controls.TextBox[5]
             { c0,c_single,dm,fv,kofb};
-            bcombo = new System.Windows.Controls.ComboBox[3]
-            {bearing,angle,b_con};
+            bcombo = new System.Windows.Controls.ComboBox[2]
+            {bearing,angle};
         }
         private void Buildbini1() //宣告軸承二
         {
             btxt = new System.Windows.Controls.TextBox[5]
             { c01,c_single1,dm1,fv1,kofb1};
-            bcombo = new System.Windows.Controls.ComboBox[3]
-            {bearing1,angle1,b_con1};
+            bcombo = new System.Windows.Controls.ComboBox[2]
+            {bearing1,angle1};
         }
-        #endregion
+
 
         #endregion
 
-        
+        #endregion
+
+       
     }
 }

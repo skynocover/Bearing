@@ -34,5 +34,17 @@ namespace Bearing.Properties {
                 this["route"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string broute {
+            get {
+                return ((string)(this["broute"]));
+            }
+            set {
+                this["broute"] = value;
+            }
+        }
     }
 }
